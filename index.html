@@ -303,7 +303,7 @@ function renderDataWarning(){
  el.classList.remove("hidden");
 }
 function resetClient(){
- $("clientForm").reset();$("clientId").value="";$("clientTitle").textContent="Cadastrar cliente";showClientError("");
+ $("clientForm").reset();$("clientId").value="";$("name").value="";$("height").value="";$("observations").value="";$("clientTitle").textContent="Cadastrar cliente";showClientError("");
  measurements.forEach(([,key])=>$("m_"+key).value="");
 }
 function renderClients(){
@@ -403,7 +403,9 @@ $("reference").addEventListener("change",()=>{
  reader.readAsDataURL(file);
 });
 function resetClothes(){
- $("clothesForm").reset();$("clothesId").value="";currentImage="";$("imagePreview").innerHTML="";$("clothesTitle").textContent="Registrar peça de roupa";
+ $("clothesForm").reset();$("clothesId").value="";
+ $("owner").value="";$("garmentName").value="";$("fabric").value="";$("details").value="";$("reference").value="";
+ $("stage").value="Ideia";$("waist").value="Natural";$("closure").value="Zíper";currentImage="";$("imagePreview").innerHTML="";$("clothesTitle").textContent="Registrar peça de roupa";
 }
 $("cancelClothes").addEventListener("click",resetClothes);
 $("clothesForm").addEventListener("submit",e=>{
