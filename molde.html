@@ -3,12 +3,12 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Meu Ateliê — Molde de Saia</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f7f3ef;color:#342b2b;font:16px Arial,sans-serif}
-header{padding:20px;background:#fff;border-bottom:1px solid #e6dcd8}
+header{padding:20px;background:white;border-bottom:1px solid #e6dcd8}
 header h1{margin:0;color:#8a5966;font-family:Georgia,serif}
 main{max-width:900px;margin:auto;padding:16px}
 .card{background:white;padding:18px;border:1px solid #e6dcd8;border-radius:12px;margin-bottom:16px}
@@ -37,57 +37,57 @@ button:disabled{opacity:.5}
 </head>
 <body>
 <header>
- <h1>Meu Ateliê</h1>
- <p>Gerador de moldes de costura</p>
+<h1>Meu Ateliê</h1>
+<p>Gerador de moldes de costura</p>
 </header>
 
 <main>
 <section class="card">
- <h2>Saia reta — cintura alta</h2>
- <p class="small">
- Meça a cintura na altura em que a saia será usada.
- A altura cintura–quadril começa nesse mesmo ponto.
- A frente é apresentada pela metade, para cortar na dobra;
- as costas correspondem a meia peça e devem ser espelhadas.
- </p>
+<h2>Saia reta — cintura alta</h2>
+<p class="small">
+Informe as medidas corporais sem folga. A folga é acrescentada
+automaticamente. Meça a altura cintura–quadril a partir da posição
+em que a saia será usada. A frente é para cortar na dobra; as costas
+são divididas ao meio e recebem extensão para o zíper.
+</p>
 
- <div class="grid">
-  <div><label for="client">Cliente</label><select id="client"><option value="">Medidas manuais</option></select></div>
-  <div><label for="waist">Cintura (cm)</label><input id="waist" type="number" min="40" max="180" step=".1"></div>
-  <div><label for="hip">Quadril (cm)</label><input id="hip" type="number" min="50" max="200" step=".1"></div>
-  <div><label for="length">Comprimento (cm)</label><input id="length" type="number" min="25" max="120" step=".1"></div>
-  <div><label for="hipDepth">Altura cintura–quadril (cm)</label><input id="hipDepth" type="number" min="15" max="35" step=".1" value="20"></div>
-  <div><label for="waistEase">Folga cintura (cm)</label><input id="waistEase" type="number" min="0" max="8" step=".5" value="1"></div>
-  <div><label for="hipEase">Folga quadril (cm)</label><input id="hipEase" type="number" min="0" max="12" step=".5" value="4"></div>
-  <div><label for="seam">Margem de costura (cm)</label><input id="seam" type="number" min="0" max="2.5" step=".1" value="1.5"></div>
-  <div><label for="zip">Extensão adicional para zíper nas costas (cm)</label><input id="zip" type="number" min="0" max="4" step=".5" value="2"></div>
- </div>
+<div class="grid">
+<div><label for="client">Cliente</label><select id="client"><option value="">Medidas manuais</option></select></div>
+<div><label for="waist">Cintura (cm)</label><input id="waist" type="number" min="40" max="180" step=".1"></div>
+<div><label for="hip">Quadril (cm)</label><input id="hip" type="number" min="50" max="200" step=".1"></div>
+<div><label for="length">Comprimento (cm)</label><input id="length" type="number" min="25" max="120" step=".1"></div>
+<div><label for="hipDepth">Altura cintura–quadril (cm)</label><input id="hipDepth" type="number" min="15" max="35" step=".1" value="20"></div>
+<div><label for="waistEase">Folga cintura (cm)</label><input id="waistEase" type="number" min="0" max="8" step=".5" value="1"></div>
+<div><label for="hipEase">Folga quadril (cm)</label><input id="hipEase" type="number" min="0" max="12" step=".5" value="4"></div>
+<div><label for="seam">Margem de costura (cm)</label><input id="seam" type="number" min="0" max="2.5" step=".1" value="1.5"></div>
+<div><label for="hem">Margem de bainha (cm)</label><input id="hem" type="number" min="0" max="8" step=".5" value="4"></div>
+<div><label for="zip">Extensão para zíper nas costas (cm)</label><input id="zip" type="number" min="1" max="4" step=".5" value="2"></div>
+</div>
 
- <button id="generate">Gerar molde</button>
- <button id="print" disabled>Imprimir / salvar PDF A4</button>
- <p id="error" role="alert"></p>
- <p id="notice" class="note" hidden></p>
+<button id="generate">Gerar molde</button>
+<button id="print" disabled>Imprimir / salvar PDF A4</button>
+<p id="error" role="alert"></p>
+<p id="notice" class="note" hidden></p>
 </section>
 
 <section id="result" class="card">
- <h2>Prévia</h2>
- <p id="summary" class="note"></p>
- <div id="preview"></div>
+<h2>Prévia do molde</h2>
+<p id="summary" class="note"></p>
+<div id="preview"></div>
 </section>
 
 <section class="card">
- <h2>Legenda</h2>
- <p class="small">
- Linha contínua preta: linha de costura. Linha cinza tracejada:
- contorno de corte aproximado. Linha colorida tracejada: centro,
- fio ou linha de referência. As folhas possuem sobreposição nominal
- para facilitar a montagem.
- </p>
- <p class="small">
- Esta é uma base experimental. Antes de usar em uma peça definitiva,
- confira o molde em tecido de teste. A curva lateral e as margens de
- corte são aproximações e ainda exigem validação física.
- </p>
+<h2>Legenda</h2>
+<p class="small">
+Linha preta contínua: linha de costura. Linha cinza tracejada:
+contorno de corte aproximado. Linha colorida: centro, fio ou referência
+de quadril. Confira o quadrado de escala antes de cortar o tecido.
+</p>
+<p class="small">
+Esta versão é uma base experimental. A margem de costura e a curva
+lateral são aproximações geométricas, não um offset industrial exato.
+Faça uma peça de teste antes de utilizar tecido definitivo.
+</p>
 </section>
 </main>
 
@@ -96,383 +96,279 @@ button:disabled{opacity:.5}
 <script>
 (function(){
 "use strict";
+const $=id=>document.getElementById(id);
+const KEY="meuAtelie_v1";
+const NS="http://www.w3.org/2000/svg";
+let clients=[];
+let generated=false;
 
-const $ = id => document.getElementById(id);
-const KEY = "meuAtelie_v1";
-const NS = "http://www.w3.org/2000/svg";
-let clients = [];
-let generated = false;
-
-function escapeHTML(value){
- return String(value ?? "").replace(/[&<>"']/g, c => ({
+function esc(value){
+ return String(value??"").replace(/[&<>"']/g,c=>({
   "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
  }[c]));
 }
 
 function loadClients(){
- const previous = $("client").value;
+ const old=$("client").value;
  try{
-  const data = JSON.parse(localStorage.getItem(KEY) || "{}");
-  clients = data && Array.isArray(data.clients)
-   ? data.clients.filter(c => c && typeof c === "object" && typeof c.id === "string")
-   : [];
- }catch(e){
-  clients = [];
- }
- $("client").innerHTML =
-  '<option value="">Medidas manuais</option>' +
-  clients.map(c =>
-   '<option value="' + escapeHTML(c.id) + '">' +
-   escapeHTML(c.name || "Cliente sem nome") + '</option>'
-  ).join("");
-
- if(clients.some(c => c.id === previous)) $("client").value = previous;
+  const data=JSON.parse(localStorage.getItem(KEY)||"{}");
+  clients=data&&Array.isArray(data.clients)
+   ?data.clients.filter(c=>c&&typeof c==="object"&&typeof c.id==="string")
+   :[];
+ }catch(e){clients=[]}
+ $("client").innerHTML='<option value="">Medidas manuais</option>'+
+  clients.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name||"Cliente sem nome")+'</option>').join("");
+ if(clients.some(c=>c.id===old))$("client").value=old;
 }
 
 function invalidate(){
- generated = false;
- $("print").disabled = true;
- $("result").style.display = "none";
- $("preview").innerHTML = "";
- $("printArea").innerHTML = "";
+ generated=false;
+ $("print").disabled=true;
+ $("result").style.display="none";
+ $("preview").innerHTML="";
+ $("printArea").innerHTML="";
 }
 
-function validSavedMeasure(measurements, key){
- if(!measurements || measurements[key] == null || measurements[key] === "") return null;
- const value = Number(measurements[key]);
- return Number.isFinite(value) && value > 0 ? value : null;
+function savedMeasure(measurements,key){
+ if(!measurements||measurements[key]==null||measurements[key]==="")return null;
+ const n=Number(measurements[key]);
+ return Number.isFinite(n)&&n>0?n:null;
 }
 
 function fillClient(client){
  invalidate();
- $("error").textContent = "";
- const measurements = client && client.measurements ? client.measurements : {};
- const mapping = [
-  ["waist","cintura"],
-  ["hip","quadril"],
-  ["length","saia"],
-  ["hipDepth","cinturaQuadril"]
- ];
-
- mapping.forEach(([field,key]) => {
-  const value = client ? validSavedMeasure(measurements,key) : null;
-  $(field).value = value === null ? (field === "hipDepth" ? "20" : "") : value;
+ $("error").textContent="";
+ const m=client&&client.measurements?client.measurements:{};
+ [["waist","cintura"],["hip","quadril"],["length","saia"],["hipDepth","cinturaQuadril"]]
+ .forEach(([id,key])=>{
+  const n=client?savedMeasure(m,key):null;
+  $(id).value=n===null?(id==="hipDepth"?"20":""):n;
  });
-
- $("notice").hidden = false;
- $("notice").textContent = client
-  ? "Medidas carregadas. Confira se a cintura foi medida na altura desejada."
-  : "Preencha as medidas manualmente.";
+ $("notice").hidden=false;
+ $("notice").textContent=client
+  ?"Medidas carregadas. Confira a posição da cintura e a altura cintura–quadril."
+  :"Preencha as medidas manualmente.";
 }
 
 loadClients();
-
-$("client").addEventListener("change", () => {
- const client = clients.find(c => c.id === $("client").value) || null;
- fillClient(client);
+$("client").addEventListener("change",()=>{
+ fillClient(clients.find(c=>c.id===$("client").value)||null);
 });
-
-["waist","hip","length","hipDepth","waistEase","hipEase","seam","zip"]
- .forEach(id => $(id).addEventListener("input", invalidate));
-
-window.addEventListener("storage", event => {
- if(event.key === KEY || event.key === null) loadClients();
+["waist","hip","length","hipDepth","waistEase","hipEase","seam","hem","zip"]
+.forEach(id=>$(id).addEventListener("input",invalidate));
+window.addEventListener("storage",e=>{
+ if(e.key===KEY||e.key===null)loadClients();
 });
 
 function generate(){
- $("error").textContent = "";
- $("notice").hidden = true;
+ $("error").textContent="";
+ $("notice").hidden=true;
 
- const limits = {
-  waist:[40,180],
-  hip:[50,200],
-  length:[25,120],
-  hipDepth:[15,35],
-  waistEase:[0,8],
-  hipEase:[0,12],
-  seam:[0,2.5],
-  zip:[0,4]
+ const limits={
+  waist:[40,180],hip:[50,200],length:[25,120],hipDepth:[15,35],
+  waistEase:[0,8],hipEase:[0,12],seam:[0,2.5],hem:[0,8],zip:[1,4]
  };
- const v = {};
-
+ const v={};
  for(const id in limits){
-  const raw = $(id).value.trim();
-  const number = Number(raw);
-  const [min,max] = limits[id];
-
-  if(raw === "" || !Number.isFinite(number) || number < min || number > max){
-   $("error").textContent = "Confira os valores e os limites indicados nos campos.";
+  const raw=$(id).value.trim();
+  const n=Number(raw);
+  const [min,max]=limits[id];
+  if(raw===""||!Number.isFinite(n)||n<min||n>max){
+   $("error").textContent="Confira os valores e os limites indicados nos campos.";
    return;
   }
-  v[id] = number;
+  v[id]=n;
  }
 
- if(v.hipDepth >= v.length){
-  $("error").textContent = "A altura cintura–quadril deve ser menor que o comprimento.";
+ if(v.hipDepth>=v.length){
+  $("error").textContent="A altura cintura–quadril precisa ser menor que o comprimento.";
   return;
  }
 
- const waist = v.waist + v.waistEase;
- const hip = v.hip + v.hipEase;
-
- if(hip <= waist){
-  $("error").textContent = "O quadril com folga deve ser maior que a cintura com folga.";
+ const waist=v.waist+v.waistEase;
+ const hip=v.hip+v.hipEase;
+ if(hip<=waist){
+  $("error").textContent="O quadril com folga deve ser maior que a cintura com folga.";
   return;
  }
 
- const mm = cm => cm * 10;
+ const mm=cm=>cm*10;
+
+ // Cada painel representa um quarto da circunferência total.
+ const hipW=mm(hip/4);
+ const waistW=mm(waist/4);
+ const difference=hipW-waistW;
+
+ if(difference<1){
+  $("error").textContent="A diferença entre cintura e quadril é pequena demais para esta base.";
+  return;
+ }
 
  /*
-  * A frente e as costas são desenhadas como meios painéis.
-  * Cada painel corresponde a um quarto da circunferência total.
+  * A diferença entre quadril e cintura é distribuída entre:
+  * 40% de redução lateral e 60% de pences.
+  * Uma pence dianteira e duas traseiras dividem essa redução.
   */
- const W = mm(hip / 4);
- const waistW = mm(waist / 4);
- const difference = W - waistW;
+ const sideIntake=difference*.40;
+ const dartTotal=difference-sideIntake;
+ const frontDart=dartTotal/3;
+ const backDart=dartTotal/3;
 
  /*
-  * A redução total de cada painel deve corresponder à diferença
-  * entre a largura de quadril e a largura de cintura daquele painel.
-  * A redução lateral e as pences fechadas somam essa diferença.
+  * A frente tem uma pence. As costas têm duas pences.
+  * Assim, uma frente + duas costas totalizam três parcelas.
   */
- const sideIntake = difference * 0.40;
- const dartIntake = difference - sideIntake;
+ const frontTop=hipW-sideIntake;
+ const backTop=hipW-sideIntake;
 
- // Uma pence na meia frente; duas pences na meia costa.
- const frontDart = dartIntake;
- const backDart = dartIntake / 2;
-
- // Largura superior antes de fechar as pences.
- const frontTop = W - sideIntake;
- const backTop = W - sideIntake;
-
- if(difference < 1){
-  $("error").textContent =
-   "A diferença entre cintura e quadril é pequena demais para esta base experimental.";
+ if(frontDart>hipW*.18||backDart>hipW*.18){
+  $("error").textContent="A diferença entre cintura e quadril é grande para esta base simples. Será preciso redistribuir as pences.";
   return;
  }
 
- if(frontDart > W * 0.22 || backDart > W * 0.22){
-  $("error").textContent =
-   "A diferença entre cintura e quadril é grande para esta base simples. A modelagem precisa de ajustes adicionais.";
-  return;
- }
+ const seam=mm(v.seam);
+ const hemAllowance=mm(v.hem);
+ const zip=mm(v.zip);
+ const xF=30;
+ const gap=50;
+ const xB=xF+hipW+gap;
+ const y=48;
+ const hipY=mm(v.hipDepth);
+ const L=mm(v.length);
+ const bottom=y+L;
+ const canvasW=xB+hipW+zip+seam+40;
+ const canvasH=bottom+hemAllowance+100;
 
- const seam = mm(v.seam);
- const zip = mm(v.zip);
- const xF = 30;
- const xB = xF + W + 50;
- const y = 48;
- const hipY = mm(v.hipDepth);
- const L = mm(v.length);
- const hem = y + L;
-
- const canvasW = xB + W + zip + seam + 35;
- const canvasH = y + L + seam + 100;
-
- function pieceGeometry(x, kind){
-  const side = x + W;
-  const topW = kind === "front" ? frontTop : backTop;
-  const waistX = x + topW;
-  const yHip = y + hipY;
-
-  const shape =
-   `M ${x} ${y}
-    L ${waistX} ${y}
-    C ${waistX + (side-waistX)*0.18} ${y+hipY*0.25},
-      ${side} ${y+hipY*0.58},
-      ${side} ${yHip}
-    L ${side} ${hem}
-    L ${x} ${hem} Z`;
+ function makePanel(x,kind){
+  const top=kind==="front"?frontTop:backTop;
+  const waistX=x+top;
+  const side=x+hipW;
+  const yHip=y+hipY;
 
   /*
-   * Contorno de corte aproximado. Na frente, o centro fica na dobra,
-   * sem margem adicional de costura no centro. Nas costas, a extensão
-   * do zíper é acrescentada ao centro traseiro.
+   * A curva lateral começa na cintura e alcança o quadril.
+   * A bainha permanece reta, como em uma saia reta básica.
    */
-  const cutCenter = kind === "front" ? x : x - zip;
-  const cutLeft = kind === "front" ? x : x - zip - seam;
-  const cutTopLeft = kind === "front" ? x : x - zip - seam;
-  const cutTopRight = waistX + seam;
+  const shape=[
+   `M ${x} ${y}`,
+   `L ${waistX} ${y}`,
+   `C ${waistX+(side-waistX)*.25} ${y+hipY*.22},`,
+   `${side} ${y+hipY*.58}, ${side} ${yHip}`,
+   `L ${side} ${bottom}`,
+   `L ${x} ${bottom} Z`
+  ].join(" ");
 
-  const cut =
-   `M ${cutTopLeft} ${y-seam}
-    L ${cutTopRight} ${y-seam}
-    C ${cutTopRight + (side-waistX)*0.18} ${y+hipY*0.25-seam},
-      ${side+seam} ${y+hipY*0.58},
-      ${side+seam} ${yHip}
-    L ${side+seam} ${hem+seam}
-    L ${cutLeft} ${hem+seam} Z`;
+  /*
+   * Contorno de corte aproximado: margem lateral e bainha.
+   * A frente mantém o centro na dobra. As costas têm extensão
+   * adicional para o zíper no centro traseiro.
+   */
+  const cutLeft=kind==="front"?x:x-zip-seam;
+  const cutTopLeft=kind==="front"?x:x-zip-seam;
+  const cutTopRight=waistX+seam;
+  const cutSide=side+seam;
+  const cutBottom=bottom+hemAllowance;
 
-  return {shape,cut,side,topW,waistX,yHip,cutCenter};
+  const cut=[
+   `M ${cutTopLeft} ${y-seam}`,
+   `L ${cutTopRight} ${y-seam}`,
+   `C ${cutTopRight+(side-waistX)*.25} ${y+hipY*.22-seam},`,
+   `${cutSide} ${y+hipY*.58}, ${cutSide} ${yHip}`,
+   `L ${cutSide} ${cutBottom}`,
+   `L ${cutLeft} ${cutBottom} Z`
+  ].join(" ");
+
+  return {shape,cut,top,waistX,side,yHip};
  }
 
- function drawPiece(x, label, kind){
-  const p = pieceGeometry(x,kind);
+ function dart(x,width,length){
+  const tip=y+length;
+  return `<path d="M ${x-width/2} ${y} L ${x} ${tip} L ${x+width/2} ${y}"
+    fill="none" stroke="#222" stroke-width=".7"/>`;
+ }
 
-  const darts = kind === "front"
-   ? [{
-      pos:x + p.topW*0.56,
-      width:frontDart,
-      len:Math.min(mm(9),hipY*0.48)
-     }]
-   : [
-     {
-      pos:x + p.topW*0.34,
-      width:backDart,
-      len:Math.min(mm(13),hipY*0.62)
-     },
-     {
-      pos:x + p.topW*0.72,
-      width:backDart,
-      len:Math.min(mm(11),hipY*0.52)
-     }
-    ];
+ function drawPanel(x,label,kind){
+  const p=makePanel(x,kind);
+  let darts="";
+  if(kind==="front"){
+   darts=dart(x+p.top*.56,frontDart,Math.min(mm(9),hipY*.48));
+  }else{
+   darts=
+    dart(x+p.top*.34,backDart,Math.min(mm(13),hipY*.62))+
+    dart(x+p.top*.72,backDart,Math.min(mm(11),hipY*.52));
+  }
 
-  let dartLines = "";
-  darts.forEach(dart => {
-   const tipY = y + dart.len;
-   dartLines +=
-    `<path d="M ${dart.pos-dart.width/2} ${y}
-                L ${dart.pos} ${tipY}
-                L ${dart.pos+dart.width/2} ${y}"
-      fill="none" stroke="#222" stroke-width=".7"/>`;
-  });
+  const centerLine=kind==="front"
+   ?`<line x1="${x}" y1="${y}" x2="${x}" y2="${bottom}" stroke="#8a5966" stroke-width=".8" stroke-dasharray="4 2"/>`
+   :`<line x1="${x}" y1="${y}" x2="${x}" y2="${bottom}" stroke="#b36a22" stroke-width=".8" stroke-dasharray="3 2"/>`;
 
-  const centerLabel = kind === "front"
-   ? "CENTRO FRENTE — DOBRA"
-   : "CENTRO COSTAS — ZÍPER";
-
-  const centerLine = kind === "front"
-   ? `<line x1="${x}" y1="${y}" x2="${x}" y2="${hem}"
-       stroke="#8a5966" stroke-width=".8" stroke-dasharray="4 2"/>`
-   : `<line x1="${x}" y1="${y}" x2="${x}" y2="${hem}"
-       stroke="#b36a22" stroke-width=".8" stroke-dasharray="2 2"/>`;
-
-  const zipLabel = kind === "back"
-   ? `<text x="${x-zip/2}" y="${y+L*.55}" text-anchor="middle"
-      font-size="4" font-family="Arial">EXTENSÃO ZÍPER</text>`
-   : "";
+  const grainX=x+p.top*.52;
+  const zipLabel=kind==="back"
+   ?`<text x="${x-zip/2}" y="${y+L*.55}" text-anchor="middle" font-size="4" font-family="Arial">EXTENSÃO ZÍPER</text>`
+   :"";
 
   return `<g>
-   <path d="${p.cut}" fill="none" stroke="#888"
-    stroke-width=".5" stroke-dasharray="3 2"/>
+   <path d="${p.cut}" fill="none" stroke="#888" stroke-width=".5" stroke-dasharray="3 2"/>
    <path d="${p.shape}" fill="none" stroke="#222" stroke-width=".8"/>
    ${centerLine}
-   ${dartLines}
-
-   <line x1="${x}" y1="${p.yHip}" x2="${p.side}" y2="${p.yHip}"
-    stroke="#387a65" stroke-width=".5" stroke-dasharray="3 2"/>
-
-   <line x1="${x+W*.5}" y1="${y+L*.28}"
-    x2="${x+W*.5}" y2="${y+L*.78}"
-    stroke="#387a65" stroke-width=".5" stroke-dasharray="5 3"/>
-
-   <text x="${x+W/2}" y="${y-8}" text-anchor="middle"
-    font-size="5" font-family="Arial">${label}</text>
-
-   <text x="${x+W/2}" y="${hem+8}" text-anchor="middle"
-    font-size="4.5" font-family="Arial">${centerLabel}</text>
-
-   <text x="${x+W*.55}" y="${p.yHip-3}"
-    font-size="4" font-family="Arial">QUADRIL</text>
-
-   <text x="${x+W*.55}" y="${hem-4}"
-    font-size="4" font-family="Arial">BAINHA</text>
-
+   ${darts}
+   <line x1="${x}" y1="${p.yHip}" x2="${p.side}" y2="${p.yHip}" stroke="#387a65" stroke-width=".5" stroke-dasharray="3 2"/>
+   <line x1="${grainX}" y1="${y+L*.30}" x2="${grainX}" y2="${y+L*.78}" stroke="#387a65" stroke-width=".5" stroke-dasharray="5 3"/>
+   <text x="${x+p.top/2}" y="${y-8}" text-anchor="middle" font-size="5" font-family="Arial">${label}</text>
+   <text x="${x+p.top/2}" y="${bottom+8}" text-anchor="middle" font-size="4.5" font-family="Arial">${kind==="front"?"CENTRO FRENTE — DOBRA":"CENTRO COSTAS — ZÍPER"}</text>
+   <text x="${x+p.top*.55}" y="${p.yHip-3}" font-size="4" font-family="Arial">LINHA DO QUADRIL</text>
+   <text x="${x+p.top*.55}" y="${bottom-4}" font-size="4" font-family="Arial">BAINHA</text>
    ${zipLabel}
   </g>`;
  }
 
- const drawing = `
+ const drawing=`
  <rect width="${canvasW}" height="${canvasH}" fill="white"/>
+ <text x="25" y="12" font-size="7" font-family="Arial">MEU ATELIÊ — SAIA RETA</text>
+ <text x="25" y="22" font-size="4.5" font-family="Arial">Cintura ${v.waist} cm | Quadril ${v.hip} cm | Comprimento ${v.length} cm</text>
+ <text x="25" y="31" font-size="4.5" font-family="Arial">Folgas: ${v.waistEase}/${v.hipEase} cm | Costura: ${v.seam} cm | Bainha: ${v.hem} cm</text>
+ ${drawPanel(xF,"FRENTE — CORTAR NA DOBRA","front")}
+ ${drawPanel(xB,"COSTAS — CORTAR 2 ESPELHADAS","back")}
+ <rect x="25" y="${bottom+hemAllowance+18}" width="50" height="50" fill="none" stroke="#222" stroke-width=".8"/>
+ <text x="25" y="${bottom+hemAllowance+15}" font-size="4.5" font-family="Arial">QUADRADO DE ESCALA: 5 × 5 cm</text>`;
 
- <text x="25" y="12" font-size="7" font-family="Arial">
-  MEU ATELIÊ — SAIA RETA
- </text>
+ $("preview").innerHTML=
+  `<svg xmlns="${NS}" width="${canvasW}mm" height="${canvasH}mm" viewBox="0 0 ${canvasW} ${canvasH}">${drawing}</svg>`;
 
- <text x="25" y="22" font-size="4.5" font-family="Arial">
-  Cintura ${v.waist} cm | Quadril ${v.hip} cm | Comprimento ${v.length} cm
- </text>
-
- <text x="25" y="31" font-size="4.5" font-family="Arial">
-  Folgas: cintura ${v.waistEase} cm / quadril ${v.hipEase} cm |
-  Margem: ${v.seam} cm
- </text>
-
- ${drawPiece(xF,"FRENTE","front")}
- ${drawPiece(xB,"COSTAS","back")}
-
- <rect x="25" y="${y+L+seam+18}" width="50" height="50"
-  fill="none" stroke="#222" stroke-width=".8"/>
-
- <text x="25" y="${y+L+seam+15}" font-size="4.5" font-family="Arial">
-  QUADRADO DE ESCALA: 5 × 5 cm
- </text>`;
-
- $("preview").innerHTML =
-  `<svg xmlns="${NS}" width="${canvasW}mm" height="${canvasH}mm"
-   viewBox="0 0 ${canvasW} ${canvasH}">${drawing}</svg>`;
-
- /*
-  * Folhas A4: área imprimível de 190 × 277 mm.
-  * Passo de 180 × 267 mm, deixando sobreposição nominal de 10 mm.
-  */
- const pageW = 190;
- const pageH = 277;
- const stepW = 180;
- const stepH = 267;
- const overlap = 10;
-
- const cols = Math.max(1,Math.ceil((canvasW-overlap)/stepW));
- const rows = Math.max(1,Math.ceil((canvasH-overlap)/stepH));
- const pages = [];
+ // A4 com sobreposição nominal de 10 mm.
+ const pageW=190,pageH=277,stepW=180,stepH=267,overlap=10;
+ const cols=Math.max(1,Math.ceil((canvasW-overlap)/stepW));
+ const rows=Math.max(1,Math.ceil((canvasH-overlap)/stepH));
+ const pages=[];
 
  for(let r=0;r<rows;r++){
   for(let c=0;c<cols;c++){
-   const px = c*stepW;
-   const py = r*stepH;
-
-   pages.push(`
-    <div class="tile">
-     <svg xmlns="${NS}" width="190mm" height="277mm"
-      viewBox="${px} ${py} ${pageW} ${pageH}">
-      ${drawing}
-
-      <path d="M ${px+5} ${py+10} h 8 M ${px+9} ${py+6} v 8"
-       stroke="#777" stroke-width=".5" fill="none"/>
-
-      <text x="${px+16}" y="${py+10}" font-size="4"
-       font-family="Arial">FOLHA ${r+1}-${c+1}</text>
-     </svg>
-    </div>`);
+   const px=c*stepW,py=r*stepH;
+   pages.push(`<div class="tile">
+    <svg xmlns="${NS}" width="190mm" height="277mm" viewBox="${px} ${py} ${pageW} ${pageH}">
+     ${drawing}
+     <path d="M ${px+5} ${py+10} h 8 M ${px+9} ${py+6} v 8" stroke="#777" stroke-width=".5" fill="none"/>
+     <text x="${px+16}" y="${py+10}" font-size="4" font-family="Arial">FOLHA ${r+1}-${c+1}</text>
+    </svg>
+   </div>`);
   }
  }
 
- $("printArea").innerHTML = pages.join("");
+ $("printArea").innerHTML=pages.join("");
+ $("summary").textContent=
+  `Cintura com folga: ${waist.toFixed(1)} cm. Quadril com folga: ${hip.toFixed(1)} cm. `+
+  `Pence dianteira: ${frontDart.toFixed(1)} mm. Cada pence traseira: ${backDart.toFixed(1)} mm. `+
+  `Margem de costura configurada: ${v.seam} cm. Bainha: ${v.hem} cm. `+
+  `Extensão adicional do zíper: ${v.zip} cm. Paginação estimada: ${cols*rows} folhas. `+
+  `Confirme as medidas e a escala antes de cortar: o contorno de corte ainda é aproximado.`;
 
- $("summary").textContent =
-  `Cintura final prevista: ${waist.toFixed(1)} cm; ` +
-  `quadril final previsto: ${hip.toFixed(1)} cm; ` +
-  `comprimento: ${v.length} cm. ` +
-  `Abertura da pence dianteira: ${frontDart.toFixed(1)} mm; ` +
-  `abertura de cada pence traseira: ${backDart.toFixed(1)} mm. ` +
-  `Margem configurada: ${v.seam} cm; ` +
-  `extensão adicional traseira: ${v.zip} cm. ` +
-  `Paginação estimada: ${cols*rows} folhas. ` +
-  `As medidas finais dependem da conferência física das pences, ` +
-  `costuras e contornos antes do corte definitivo.`;
-
- $("result").style.display = "block";
- $("print").disabled = false;
- generated = true;
+ $("result").style.display="block";
+ $("print").disabled=false;
+ generated=true;
 }
 
 $("generate").addEventListener("click",generate);
-$("print").addEventListener("click",() => {
- if(generated) window.print();
-});
-
+$("print").addEventListener("click",()=>{if(generated)window.print();});
 })();
 </script>
 </body>
