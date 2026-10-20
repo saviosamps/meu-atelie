@@ -36,6 +36,8 @@ textarea{min-height:75px;resize:vertical}
 img.reference{display:block;max-width:100%;max-height:240px;object-fit:contain;border-radius:8px;margin-top:10px}
 .notice{font-size:13px;line-height:1.5;color:#725b48;background:#f8f0e6;padding:12px;border-radius:9px}
 .empty{padding:22px 0;color:var(--muted);text-align:center}
+.error{color:#a12e2e;font-size:14px;line-height:1.5;margin:12px 0 0}
+.notice ul{margin:8px 0 0;padding-left:20px}
 footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
 </style>
 </head>
@@ -51,6 +53,7 @@ footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
     <button class="secondary" data-tab="backup">Backup de dados</button>
     <a class="btn" href="molde.html">Gerador de moldes</a>
   </nav>
+  <div id="dataWarning" class="notice hidden" role="status" style="margin-bottom:16px"></div>
 
   <section id="clients">
     <div class="panel">
@@ -65,6 +68,7 @@ footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
         <textarea id="observations" placeholder="Preferências de caimento, ajustes, alergias a tecidos..."></textarea>
         <h3>Medidas corporais (cm)</h3>
         <div id="measurementFields" class="fields"></div>
+        <p id="clientError" class="error hidden" role="alert"></p>
         <div class="actions">
           <button type="submit">Salvar cliente</button>
           <button type="button" class="secondary" id="cancelClient">Limpar formulário</button>
@@ -146,10 +150,41 @@ const measurements=[
  ["Altura do corpo","alturaCorpo"],["Contorno da cabeça","cabeca"]
 ];
 const $=id=>document.getElementById(id);
+const UNNAMED="Cliente sem nome";
 let data={clients:[],clothes:[]},currentImage="";
+const isObj=v=>v!==null&&typeof v==="object"&&!Array.isArray(v);
+function hasName(c){return isObj(c)&&typeof c.name==="string"&&c.name.trim()!=="";}
+function clientName(c){return hasName(c)?c.name.trim():UNNAMED;}
+function hasValidId(x){return isObj(x)&&typeof x.id==="string"&&x.id.trim()!=="";}
+// Verifica os dados sem alterá-los. "errors" impedem a importação; "warnings" são avisos a corrigir.
+function checkData(d){
+ const errors=[],warnings=[];
+ if(!isObj(d)||!Array.isArray(d.clients)||!Array.isArray(d.clothes)){
+  errors.push("O arquivo não contém as listas de clientes e de peças.");
+  return {errors,warnings};
+ }
+ const ids=new Set();
+ d.clients.forEach((c,i)=>{
+  const pos=`Cliente nº ${i+1}`+(hasName(c)?` (${c.name.trim()})`:"");
+  if(!isObj(c)){errors.push(`Cliente nº ${i+1}: registro em formato inválido.`);return;}
+  if(!hasValidId(c))errors.push(`${pos}: sem identificador válido.`);
+  else if(ids.has(c.id))errors.push(`${pos}: identificador repetido.`);
+  else ids.add(c.id);
+  if(c.measurements!=null&&!isObj(c.measurements))errors.push(`${pos}: medidas em formato inválido.`);
+  if(!hasName(c))warnings.push(`${pos}: sem nome ou com nome contendo apenas espaços.`);
+ });
+ const garmentIds=new Set();
+ d.clothes.forEach((g,i)=>{
+  if(!isObj(g))errors.push(`Peça nº ${i+1}: registro em formato inválido.`);
+  else if(!hasValidId(g))errors.push(`Peça nº ${i+1}: sem identificador válido.`);
+  else if(garmentIds.has(g.id))errors.push(`Peça nº ${i+1}: identificador repetido.`);
+  else garmentIds.add(g.id);
+ });
+ return {errors,warnings};
+}
 try{
  const saved=localStorage.getItem(KEY);
- if(saved){const parsed=JSON.parse(saved);if(Array.isArray(parsed.clients)&&Array.isArray(parsed.clothes))data=parsed;}
+ if(saved){const parsed=JSON.parse(saved);if(isObj(parsed)&&Array.isArray(parsed.clients)&&Array.isArray(parsed.clothes))data=parsed;}
 }catch(e){alert("Não foi possível ler os dados salvos. Faça a recuperação usando um backup, se houver.");}
 function persist(){
  try{localStorage.setItem(KEY,JSON.stringify(data));return true;}
@@ -161,39 +196,48 @@ function makeMeasurementFields(){
  `<div class="field"><label for="m_${key}">${safe(label)} (cm)</label><input id="m_${key}" type="number" min="0" max="500" step="0.1" inputmode="decimal"></div>`
  ).join("");
 }
+function showClientError(message){$("clientError").textContent=message;$("clientError").classList.toggle("hidden",!message);}
+function renderDataWarning(){
+ const {errors,warnings}=checkData(data),items=[...errors,...warnings],el=$("dataWarning");
+ if(!items.length){el.classList.add("hidden");el.innerHTML="";return;}
+ el.innerHTML=`<strong>Atenção: há cadastros com informações inválidas.</strong> Eles foram mantidos sem alteração. Clientes sem nome aparecem como “${UNNAMED}”: use “Editar medidas” para informar o nome.`+
+ `<ul>${items.slice(0,10).map(t=>`<li>${safe(t)}</li>`).join("")}</ul>`+(items.length>10?`<p>… e mais ${items.length-10} aviso(s).</p>`:"");
+ el.classList.remove("hidden");
+}
 function resetClient(){
- $("clientForm").reset();$("clientId").value="";$("clientTitle").textContent="Cadastrar cliente";
+ $("clientForm").reset();$("clientId").value="";$("name").value="";$("height").value="";$("observations").value="";$("clientTitle").textContent="Cadastrar cliente";showClientError("");
  measurements.forEach(([,key])=>$("m_"+key).value="");
 }
 function renderClients(){
  const query=$("searchClients").value.trim().toLocaleLowerCase("pt-BR");
- const list=data.clients.filter(c=>c.name.toLocaleLowerCase("pt-BR").includes(query));
+ const list=data.clients.filter(c=>hasValidId(c)&&clientName(c).toLocaleLowerCase("pt-BR").includes(query));
  $("clientList").innerHTML=list.length?list.map(c=>{
- const count=data.clothes.filter(g=>g.owner===c.id).length;
- return `<div class="item"><strong>${safe(c.name)}</strong><span class="muted">${c.height?`Altura: ${safe(c.height)} cm · `:""}${count} peça(s)</span>
+ const count=data.clothes.filter(g=>g?.owner===c.id).length;
+ return `<div class="item"><strong>${safe(clientName(c))}</strong><span class="muted">${c.height?`Altura: ${safe(c.height)} cm · `:""}${count} peça(s)</span>
  <p class="muted">${safe(c.observations||"Sem observações")}</p>
- <div class="actions"><button class="secondary" data-edit-client="${c.id}">Editar medidas</button><button class="secondary" data-view-client="${c.id}">Ver ficha</button><button class="danger" data-delete-client="${c.id}">Excluir</button></div>
- <div id="view_${c.id}" class="hidden muted"></div></div>`;
+ <div class="actions"><button class="secondary" data-edit-client="${safe(c.id)}">Editar medidas</button><button class="secondary" data-view-client="${safe(c.id)}">Ver ficha</button><button class="danger" data-delete-client="${safe(c.id)}">Excluir</button></div>
+ <div id="view_${safe(c.id)}" class="hidden muted"></div></div>`;
  }).join(""):'<div class="empty">Nenhum cliente cadastrado ainda.</div>';
  updateOwnerOptions();
 }
 function updateOwnerOptions(){
  const previous=$("owner").value;
- $("owner").innerHTML='<option value="">Selecione um cliente</option>'+data.clients.map(c=>`<option value="${c.id}">${safe(c.name)}</option>`).join("");
- if(data.clients.some(c=>c.id===previous))$("owner").value=previous;
+ $("owner").innerHTML='<option value="">Selecione um cliente</option>'+data.clients.filter(hasValidId).map(c=>`<option value="${safe(c.id)}">${safe(clientName(c))}</option>`).join("");
+ if(data.clients.some(c=>c?.id===previous))$("owner").value=previous;
 }
 function renderClothes(){
- $("clothesList").innerHTML=data.clothes.length?data.clothes.slice().reverse().map(g=>{
- const c=data.clients.find(x=>x.id===g.owner);
+ const clothes=data.clothes.filter(hasValidId);
+ $("clothesList").innerHTML=clothes.length?clothes.slice().reverse().map(g=>{
+ const c=data.clients.find(x=>x?.id===g.owner);
  return `<div class="item"><strong>${safe(g.garmentName)}</strong><span class="tag">${safe(g.stage)}</span>
- <p class="muted">Cliente: ${safe(c?c.name:"Cadastro não encontrado")} · Tecido: ${safe(g.fabric||"Não informado")}</p>
+ <p class="muted">Cliente: ${safe(c?clientName(c):"Cadastro não encontrado")} · Tecido: ${safe(g.fabric||"Não informado")}</p>
  <p class="muted">Cintura: ${safe(g.waist||"Natural")} · Fechamento: ${safe(g.closure||"Não informado")}</p>
  <p>${safe(g.details||"Sem detalhes.")}</p>
  ${g.image?`<img class="reference" src="${g.image}" alt="Imagem de referência">`:""}
- <div class="actions"><button class="secondary" data-edit-clothes="${g.id}">Editar peça</button><button class="danger" data-delete-clothes="${g.id}">Excluir</button></div></div>`;
+ <div class="actions"><button class="secondary" data-edit-clothes="${safe(g.id)}">Editar peça</button><button class="danger" data-delete-clothes="${safe(g.id)}">Excluir</button></div></div>`;
  }).join(""):'<div class="empty">Nenhuma peça registrada ainda.</div>';
 }
-function renderAll(){renderClients();renderClothes();$("storageStatus").textContent=`${data.clients.length} cliente(s) e ${data.clothes.length} peça(s) cadastrados neste navegador.`;}
+function renderAll(){renderClients();renderClothes();renderDataWarning();$("storageStatus").textContent=`${data.clients.length} cliente(s) e ${data.clothes.length} peça(s) cadastrados neste navegador.`;}
 function id(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
 function switchTab(tab){
  document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));
@@ -205,11 +249,20 @@ document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()
 makeMeasurementFields();
 $("clientForm").addEventListener("submit",e=>{
  e.preventDefault();
+ const name=$("name").value.trim();
+ if(!name){
+  showClientError("Informe o nome da cliente. O nome não pode ficar vazio nem conter apenas espaços.");
+  $("name").focus();return;
+ }
+ showClientError("");
  const clientId=$("clientId").value||id();
+ const old=data.clients.find(c=>c?.id===clientId);
  const measurementsData={};
  measurements.forEach(([,key])=>{const v=$("m_"+key).value;measurementsData[key]=v===""?"":Number(v);});
- const client={id:clientId,name:$("name").value.trim(),height:$("height").value?Number($("height").value):"",observations:$("observations").value.trim(),measurements:measurementsData};
- const index=data.clients.findIndex(c=>c.id===clientId);
+ // Mantém campos e medidas extras já existentes no cadastro (dados de versões futuras ou de backups).
+ const client={...(isObj(old)?old:{}),id:clientId,name,height:$("height").value?Number($("height").value):"",observations:$("observations").value.trim(),
+  measurements:{...(isObj(old?.measurements)?old.measurements:{}),...measurementsData}};
+ const index=data.clients.findIndex(c=>c?.id===clientId);
  if(index>=0)data.clients[index]=client;else data.clients.push(client);
  if(persist()){resetClient();renderAll();alert("Cliente salvo.");}
 });
@@ -217,18 +270,18 @@ $("cancelClient").addEventListener("click",resetClient);
 $("searchClients").addEventListener("input",renderClients);
 $("clientList").addEventListener("click",e=>{
  const b=e.target.closest("button");if(!b)return;
- const c=data.clients.find(x=>x.id===b.dataset.editClient||x.id===b.dataset.viewClient||x.id===b.dataset.deleteClient);
+ const c=data.clients.find(x=>hasValidId(x)&&(x.id===b.dataset.editClient||x.id===b.dataset.viewClient||x.id===b.dataset.deleteClient));
  if(!c)return;
  if(b.dataset.editClient){
-  $("clientId").value=c.id;$("name").value=c.name;$("height").value=c.height;$("observations").value=c.observations;
+  $("clientId").value=c.id;$("name").value=typeof c.name==="string"?c.name:"";$("height").value=c.height??"";$("observations").value=c.observations??"";showClientError("");
   measurements.forEach(([,key])=>$("m_"+key).value=c.measurements?.[key]??"");
   $("clientTitle").textContent="Editar cliente";window.scrollTo({top:0,behavior:"smooth"});
  }else if(b.dataset.viewClient){
   const el=$("view_"+c.id);el.classList.toggle("hidden");
-  el.innerHTML=`<h3>Ficha de ${safe(c.name)}</h3>`+measurements.map(([label,key])=>`<div>${safe(label)}: ${c.measurements?.[key]!==""&&c.measurements?.[key]!=null?safe(c.measurements[key])+" cm":"Não informado"}</div>`).join("");
+  el.innerHTML=`<h3>Ficha de ${safe(clientName(c))}</h3>`+measurements.map(([label,key])=>`<div>${safe(label)}: ${c.measurements?.[key]!==""&&c.measurements?.[key]!=null?safe(c.measurements[key])+" cm":"Não informado"}</div>`).join("");
  }else if(b.dataset.deleteClient){
-  if(!confirm(`Excluir ${c.name} e as peças associadas? Essa ação não pode ser desfeita sem backup.`))return;
-  data.clients=data.clients.filter(x=>x.id!==c.id);data.clothes=data.clothes.filter(g=>g.owner!==c.id);
+  if(!confirm(`Excluir ${clientName(c)} e as peças associadas? Essa ação não pode ser desfeita sem backup.`))return;
+  data.clients=data.clients.filter(x=>x!==c);data.clothes=data.clothes.filter(g=>g?.owner!==c.id);
   if(persist())renderAll();
  }
 });
@@ -251,15 +304,17 @@ $("reference").addEventListener("change",()=>{
  reader.readAsDataURL(file);
 });
 function resetClothes(){
- $("clothesForm").reset();$("clothesId").value="";currentImage="";$("imagePreview").innerHTML="";$("clothesTitle").textContent="Registrar peça de roupa";
+ $("clothesForm").reset();$("clothesId").value="";
+ $("owner").value="";$("garmentName").value="";$("fabric").value="";$("details").value="";$("reference").value="";
+ $("stage").value="Ideia";$("waist").value="Natural";$("closure").value="Zíper";currentImage="";$("imagePreview").innerHTML="";$("clothesTitle").textContent="Registrar peça de roupa";
 }
 $("cancelClothes").addEventListener("click",resetClothes);
 $("clothesForm").addEventListener("submit",e=>{
  e.preventDefault();
  const garmentId=$("clothesId").value||id();
- const old=data.clothes.find(g=>g.id===garmentId);
- const garment={id:garmentId,owner:$("owner").value,garmentName:$("garmentName").value.trim(),fabric:$("fabric").value.trim(),stage:$("stage").value,waist:$("waist").value,closure:$("closure").value,details:$("details").value.trim(),image:currentImage||old?.image||""};
- const index=data.clothes.findIndex(g=>g.id===garmentId);
+ const old=data.clothes.find(g=>g?.id===garmentId);
+ const garment={...(isObj(old)?old:{}),id:garmentId,owner:$("owner").value,garmentName:$("garmentName").value.trim(),fabric:$("fabric").value.trim(),stage:$("stage").value,waist:$("waist").value,closure:$("closure").value,details:$("details").value.trim(),image:currentImage||old?.image||""};
+ const index=data.clothes.findIndex(g=>g?.id===garmentId);
  if(index>=0)data.clothes[index]=garment;else data.clothes.push(garment);
  if(persist()){resetClothes();renderAll();alert("Peça salva.");}
 });
@@ -267,12 +322,12 @@ $("clothesList").addEventListener("click",e=>{
  const b=e.target.closest("button");if(!b)return;
  if(b.dataset.deleteClothes){
   if(!confirm("Excluir esta peça?"))return;
-  data.clothes=data.clothes.filter(g=>g.id!==b.dataset.deleteClothes);if(persist())renderAll();
+  data.clothes=data.clothes.filter(g=>g?.id!==b.dataset.deleteClothes);if(persist())renderAll();
  }
  if(b.dataset.editClothes){
-  const g=data.clothes.find(x=>x.id===b.dataset.editClothes);if(!g)return;
-  $("clothesId").value=g.id;$("owner").value=g.owner;$("garmentName").value=g.garmentName;$("fabric").value=g.fabric;
-  $("stage").value=g.stage;$("waist").value=g.waist||"Natural";$("closure").value=g.closure||"Zíper";$("details").value=g.details;
+  const g=data.clothes.find(x=>x?.id===b.dataset.editClothes);if(!g)return;
+  $("clothesId").value=g.id;$("owner").value=g.owner??"";$("garmentName").value=g.garmentName??"";$("fabric").value=g.fabric??"";
+  $("stage").value=g.stage||"Ideia";$("waist").value=g.waist||"Natural";$("closure").value=g.closure||"Zíper";$("details").value=g.details??"";
   currentImage=g.image||"";$("imagePreview").innerHTML=currentImage?`<img class="reference" src="${currentImage}" alt="Imagem de referência">`:"";
   $("clothesTitle").textContent="Editar peça";switchTab("clothes");window.scrollTo({top:0,behavior:"smooth"});
  }
@@ -285,14 +340,24 @@ $("exportData").addEventListener("click",()=>{
 $("importButton").addEventListener("click",()=>$("importFile").click());
 $("importFile").addEventListener("change",async()=>{
  const file=$("importFile").files[0];if(!file)return;
+ const list=items=>"\n\n- "+items.slice(0,10).join("\n- ")+(items.length>10?`\n… e mais ${items.length-10}.`:"");
  try{
-  const parsed=JSON.parse(await file.text());
-  if(!Array.isArray(parsed.clients)||!Array.isArray(parsed.clothes))throw Error("Formato inválido");
-  if(!confirm("Importar este backup substituirá os cadastros atuais. Deseja continuar?"))return;
+  let parsed;
+  try{parsed=JSON.parse(await file.text());}
+  catch(e){alert("Arquivo inválido: não é um backup JSON legível. Nenhum backup foi importado e os cadastros atuais não foram alterados.");return;}
+  const {errors,warnings}=checkData(parsed);
+  if(errors.length){
+   alert("Backup não importado. Foram encontradas informações inválidas:"+list(errors)+"\n\nOs cadastros atuais não foram alterados.");
+   return;
+  }
+  let question="Importar este backup substituirá os cadastros atuais. Deseja continuar?";
+  if(warnings.length)question="Atenção: o backup contém informações a corrigir:"+list(warnings)+
+   `\n\nEsses cadastros serão importados sem alteração e aparecerão como “${UNNAMED}” até que você informe o nome em “Editar medidas”.\n\n`+question;
+  if(!confirm(question))return;
   const previous=data;data=parsed;
-  if(persist()){renderAll();alert("Backup importado.");}else data=previous;
- }catch(e){alert("Arquivo inválido ou incompatível. Nenhum backup foi importado.");}
- $("importFile").value="";
+  if(persist()){resetClient();resetClothes();renderAll();alert("Backup importado.");}else data=previous;
+ }catch(e){alert("Não foi possível importar o backup. Os cadastros atuais não foram alterados.");}
+ finally{$("importFile").value="";}
 });
 renderAll();switchTab("clients");
 })();
