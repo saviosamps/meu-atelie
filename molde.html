@@ -168,13 +168,17 @@ function esc(value){
 function loadClients(){
  const select = $("client");
  const previous = select.value;
+ // Somente leitura: este arquivo nunca grava na chave STORAGE_KEY.
+ let unreadable = false;
  try{
-  const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-  loadedClients = isObj(data) && Array.isArray(data.clients)
-   ? data.clients.filter(c =>
-      isObj(c) && typeof c.id === "string" && c.id.trim() !== "")
-   : [];
+  const raw = localStorage.getItem(STORAGE_KEY);
+  const data = raw ? JSON.parse(raw) : {clients: []};
+  unreadable = !(isObj(data) && Array.isArray(data.clients) && Array.isArray(data.clothes ?? []));
+  loadedClients = unreadable ? [] :
+   data.clients.filter(c =>
+    isObj(c) && typeof c.id === "string" && c.id.trim() !== "");
  }catch(error){
+  unreadable = true;
   loadedClients = [];
  }
  select.innerHTML =
@@ -190,6 +194,12 @@ function loadClients(){
   showNotice(
    "A cliente selecionada não está mais cadastrada. " +
    "Os campos de medida foram limpos.");
+ }
+ if(unreadable){
+  showNotice(
+   "Os dados salvos neste navegador não puderam ser lidos, por isso nenhuma cliente foi carregada. " +
+   "Abra o cadastro (Meu Ateliê) para ver o modo protegido e as opções de recuperação. " +
+   "Você ainda pode informar as medidas manualmente.");
  }
 }
 
