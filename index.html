@@ -17,7 +17,8 @@ nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
 button,.btn{border:0;border-radius:9px;padding:11px 14px;background:var(--accent);color:white;cursor:pointer;font-size:14px}
 button.secondary{background:#eee5e3;color:var(--ink)}
 button.danger{background:#a63e3e}
-button:disabled{opacity:.5}
+button:disabled{opacity:.5;cursor:not-allowed}
+input:disabled,textarea:disabled,select:disabled{background:#f1ecea;color:#9a8f8c;cursor:not-allowed}
 .panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
 h2{font-size:21px;margin:0 0 15px}
 h3{font-size:17px;margin:20px 0 10px}
@@ -38,6 +39,8 @@ img.reference{display:block;max-width:100%;max-height:240px;object-fit:contain;b
 .empty{padding:22px 0;color:var(--muted);text-align:center}
 .error{color:#a12e2e;font-size:14px;line-height:1.5;margin:12px 0 0}
 .notice ul{margin:8px 0 0;padding-left:20px}
+.guard{font-size:14px;line-height:1.5;color:#5c1f1f;background:#fbe9e7;border:2px solid #a63e3e;padding:14px;border-radius:9px;margin-bottom:16px}
+.guard code{word-break:break-all;background:#fff;padding:1px 4px;border-radius:4px}
 footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
 </style>
 </head>
@@ -53,6 +56,7 @@ footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
     <button class="secondary" data-tab="backup">Backup de dados</button>
     <a class="btn" href="molde.html">Gerador de moldes</a>
   </nav>
+  <div id="guardBanner" class="guard hidden" role="alert"></div>
   <div id="dataWarning" class="notice hidden" role="status" style="margin-bottom:16px"></div>
 
   <section id="clients">
@@ -152,6 +156,10 @@ const measurements=[
 const $=id=>document.getElementById(id);
 const UNNAMED="Cliente sem nome";
 let data={clients:[],clothes:[]},currentImage="";
+// Proteção dos dados salvos. "storedRaw" é o conteúdo exato da chave KEY lido ao abrir a página
+// ou gravado por esta aba; "guard" indica modo protegido (dados ilegíveis/inválidos) ou conflito com outra aba.
+const COPY_PREFIX=KEY+"_copia_";
+let storedRaw=null,guard=null;
 const isObj=v=>v!==null&&typeof v==="object"&&!Array.isArray(v);
 function hasName(c){return isObj(c)&&typeof c.name==="string"&&c.name.trim()!=="";}
 function clientName(c){return hasName(c)?c.name.trim():UNNAMED;}
@@ -182,13 +190,103 @@ function checkData(d){
  });
  return {errors,warnings};
 }
-try{
- const saved=localStorage.getItem(KEY);
- if(saved){const parsed=JSON.parse(saved);if(isObj(parsed)&&Array.isArray(parsed.clients)&&Array.isArray(parsed.clothes))data=parsed;}
-}catch(e){alert("Não foi possível ler os dados salvos. Faça a recuperação usando um backup, se houver.");}
+function readStoredData(){
+ let raw;
+ try{raw=localStorage.getItem(KEY);}
+ catch(e){enterProtected(null,["O navegador não permitiu ler os dados salvos."]);return;}
+ if(raw===null||raw===""){storedRaw=raw;return;}
+ let parsed;
+ try{parsed=JSON.parse(raw);}
+ catch(e){enterProtected(raw,["O conteúdo salvo não é um JSON legível."]);return;}
+ const {errors}=checkData(parsed);
+ if(errors.length){enterProtected(raw,errors);return;}
+ data=parsed;storedRaw=raw;
+}
+// Modo protegido: nenhuma gravação na chave KEY até uma recuperação explícita.
+function enterProtected(raw,reasons){
+ guard={kind:"protected",raw,reasons,copyKey:null,copyReused:false,copyError:null};
+ data={clients:[],clothes:[]};
+ if(raw===null)guard.copyError="O conteúdo salvo não pôde ser lido, por isso não foi possível copiá-lo nem disponibilizá-lo para download.";
+ else preserveCopy();
+}
+// Guarda o conteúdo original, sem modificação, em uma chave nova com data e hora.
+// Nunca sobrescreve nem exclui cópias: reaproveita uma cópia idêntica já existente.
+function preserveCopy(){
+ const g=guard;
+ try{
+  for(let i=0;i<localStorage.length;i++){
+   const k=localStorage.key(i);
+   if(k&&k.startsWith(COPY_PREFIX)&&localStorage.getItem(k)===g.raw){g.copyKey=k;g.copyReused=true;g.copyError=null;return;}
+  }
+  const base=COPY_PREFIX+new Date().toISOString();
+  let k=base,n=2;
+  while(localStorage.getItem(k)!==null)k=`${base}_${n++}`;
+  localStorage.setItem(k,g.raw);
+  if(localStorage.getItem(k)!==g.raw){g.copyError=`A cópia gravada na chave “${k}” não confere com o conteúdo original.`;return;}
+  g.copyKey=k;g.copyReused=false;g.copyError=null;
+ }catch(e){
+  g.copyError="O navegador não permitiu criar a cópia de segurança"+(e&&e.name==="QuotaExceededError"?" (armazenamento cheio).":".");
+ }
+}
+function enterConflict(){
+ guard={kind:"conflict"};applyGuard();renderAll();
+}
 function persist(){
- try{localStorage.setItem(KEY,JSON.stringify(data));return true;}
+ if(guard){
+  alert(guard.kind==="protected"
+   ?"Modo protegido: nada foi salvo. Os dados salvos neste navegador não puderam ser lidos ou validados. Veja o aviso no topo da página."
+   :"Nada foi salvo: os dados foram alterados em outra aba ou janela. Recarregue a página para ver os dados atuais.");
+  return false;
+ }
+ let current;
+ try{current=localStorage.getItem(KEY);}catch(e){current=undefined;}
+ if(current!==storedRaw){
+  enterConflict();
+  alert("Nada foi salvo: os dados deste navegador foram alterados em outra aba ou janela (ou não podem mais ser lidos). Para não sobrescrevê-los, as gravações foram bloqueadas. Recarregue a página para ver os dados atuais.");
+  return false;
+ }
+ const json=JSON.stringify(data);
+ try{localStorage.setItem(KEY,json);storedRaw=json;return true;}
  catch(e){alert("O navegador não conseguiu salvar. O armazenamento pode estar cheio. Exporte um backup e remova imagens grandes ou antigas.");return false;}
+}
+function downloadOriginal(){
+ if(!guard||guard.kind!=="protected"||guard.raw===null)return;
+ const stamp=new Date().toISOString().replace(/[:.]/g,"-");
+ const url=URL.createObjectURL(new Blob([guard.raw],{type:"text/plain"})),a=document.createElement("a");
+ a.href=url;a.download=`meu-atelie-conteudo-original-${stamp}.txt`;a.click();URL.revokeObjectURL(url);
+}
+function renderGuard(){
+ const el=$("guardBanner");
+ if(!guard){el.classList.add("hidden");el.innerHTML="";return;}
+ if(guard.kind==="conflict"){
+  el.innerHTML=`<strong>Gravações bloqueadas: os dados foram alterados em outra aba ou janela.</strong>
+  <p>Para não sobrescrever essas alterações, esta aba não salva mais nada. Alterações feitas aqui depois da última gravação não foram salvas. Recarregue a página para ver os dados atuais.</p>
+  <div class="actions"><button type="button" data-guard="reload">Recarregar página</button></div>`;
+ }else{
+  const g=guard,list=g.reasons.slice(0,10).map(t=>`<li>${safe(t)}</li>`).join("")+(g.reasons.length>10?`<li>… e mais ${g.reasons.length-10}.</li>`:"");
+  const copy=g.copyKey
+   ?`<p>${g.copyReused?"Já existe":"Foi criada"} uma cópia de segurança do conteúdo original, sem alteração, neste navegador, na chave <code>${safe(g.copyKey)}</code>.</p>`
+   :`<p><strong>Não foi possível guardar uma cópia de segurança:</strong> ${safe(g.copyError)} O aplicativo continua bloqueado para gravações e a recuperação fica indisponível até que a cópia seja criada.</p>`;
+  el.innerHTML=`<strong>Modo protegido: os dados salvos neste navegador não puderam ser lidos ou validados.</strong>
+  <ul>${list}</ul>
+  <p>Para não perder informações, nenhuma gravação será feita e o cadastro e a edição estão bloqueados. O conteúdo salvo foi mantido como estava.</p>${copy}
+  <p>Recomendamos baixar o conteúdo original antes de qualquer recuperação. Para sair do modo protegido, use “Recuperar a partir de um backup”: a recuperação substitui os dados salvos neste navegador e pede confirmação.</p>
+  <div class="actions">
+   ${g.raw!==null?'<button type="button" data-guard="download">Baixar conteúdo original</button>':""}
+   ${g.copyKey||g.raw===null?"":'<button type="button" class="secondary" data-guard="retry">Tentar criar a cópia novamente</button>'}
+   <button type="button" class="secondary" data-guard="recover"${g.copyKey?"":" disabled"}>Recuperar a partir de um backup</button>
+  </div>`;
+ }
+ el.classList.remove("hidden");
+}
+function applyGuard(){
+ const locked=!!guard;
+ document.querySelectorAll("#clientForm input,#clientForm textarea,#clientForm button,#clothesForm input,#clothesForm select,#clothesForm textarea,#clothesForm button")
+  .forEach(el=>el.disabled=locked);
+ $("exportData").disabled=guard?.kind==="protected";
+ $("importButton").disabled=guard?.kind==="conflict"||(guard?.kind==="protected"&&!guard.copyKey);
+ $("importButton").textContent=guard?.kind==="protected"?"Recuperar a partir de um backup":"Importar backup";
+ renderGuard();
 }
 function safe(value){return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
 function makeMeasurementFields(){
@@ -215,9 +313,9 @@ function renderClients(){
  const count=data.clothes.filter(g=>g?.owner===c.id).length;
  return `<div class="item"><strong>${safe(clientName(c))}</strong><span class="muted">${c.height?`Altura: ${safe(c.height)} cm · `:""}${count} peça(s)</span>
  <p class="muted">${safe(c.observations||"Sem observações")}</p>
- <div class="actions"><button class="secondary" data-edit-client="${safe(c.id)}">Editar medidas</button><button class="secondary" data-view-client="${safe(c.id)}">Ver ficha</button><button class="danger" data-delete-client="${safe(c.id)}">Excluir</button></div>
+ <div class="actions"><button class="secondary" data-edit-client="${safe(c.id)}"${guard?" disabled":""}>Editar medidas</button><button class="secondary" data-view-client="${safe(c.id)}">Ver ficha</button><button class="danger" data-delete-client="${safe(c.id)}"${guard?" disabled":""}>Excluir</button></div>
  <div id="view_${safe(c.id)}" class="hidden muted"></div></div>`;
- }).join(""):'<div class="empty">Nenhum cliente cadastrado ainda.</div>';
+ }).join(""):`<div class="empty">${guard?.kind==="protected"?"Cadastros indisponíveis no modo protegido. Veja o aviso no topo da página.":"Nenhum cliente cadastrado ainda."}</div>`;
  updateOwnerOptions();
 }
 function updateOwnerOptions(){
@@ -234,16 +332,17 @@ function renderClothes(){
  <p class="muted">Cintura: ${safe(g.waist||"Natural")} · Fechamento: ${safe(g.closure||"Não informado")}</p>
  <p>${safe(g.details||"Sem detalhes.")}</p>
  ${g.image?`<img class="reference" src="${g.image}" alt="Imagem de referência">`:""}
- <div class="actions"><button class="secondary" data-edit-clothes="${safe(g.id)}">Editar peça</button><button class="danger" data-delete-clothes="${safe(g.id)}">Excluir</button></div></div>`;
- }).join(""):'<div class="empty">Nenhuma peça registrada ainda.</div>';
+ <div class="actions"><button class="secondary" data-edit-clothes="${safe(g.id)}"${guard?" disabled":""}>Editar peça</button><button class="danger" data-delete-clothes="${safe(g.id)}"${guard?" disabled":""}>Excluir</button></div></div>`;
+ }).join(""):`<div class="empty">${guard?.kind==="protected"?"Peças indisponíveis no modo protegido. Veja o aviso no topo da página.":"Nenhuma peça registrada ainda."}</div>`;
 }
-function renderAll(){renderClients();renderClothes();renderDataWarning();$("storageStatus").textContent=`${data.clients.length} cliente(s) e ${data.clothes.length} peça(s) cadastrados neste navegador.`;}
+function statusText(){return guard?.kind==="protected"?"Modo protegido: os dados salvos neste navegador não puderam ser lidos ou validados.":`${data.clients.length} cliente(s) e ${data.clothes.length} peça(s) cadastrados neste navegador.`;}
+function renderAll(){renderClients();renderClothes();renderDataWarning();$("storageStatus").textContent=statusText();}
 function id(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
 function switchTab(tab){
  document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));
  $(tab).classList.remove("hidden");
  document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("secondary",b.dataset.tab!==tab));
- if(tab==="backup")$("storageStatus").textContent=`${data.clients.length} cliente(s) e ${data.clothes.length} peça(s) cadastrados neste navegador.`;
+ if(tab==="backup")$("storageStatus").textContent=statusText();
 }
 document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.tab)));
 makeMeasurementFields();
@@ -271,7 +370,7 @@ $("searchClients").addEventListener("input",renderClients);
 $("clientList").addEventListener("click",e=>{
  const b=e.target.closest("button");if(!b)return;
  const c=data.clients.find(x=>hasValidId(x)&&(x.id===b.dataset.editClient||x.id===b.dataset.viewClient||x.id===b.dataset.deleteClient));
- if(!c)return;
+ if(!c||(guard&&!b.dataset.viewClient))return;
  if(b.dataset.editClient){
   $("clientId").value=c.id;$("name").value=typeof c.name==="string"?c.name:"";$("height").value=c.height??"";$("observations").value=c.observations??"";showClientError("");
   measurements.forEach(([,key])=>$("m_"+key).value=c.measurements?.[key]??"");
@@ -317,7 +416,7 @@ $("clothesForm").addEventListener("submit",e=>{
  if(persist()){resetClothes();renderAll();alert("Peça salva.");}
 });
 $("clothesList").addEventListener("click",e=>{
- const b=e.target.closest("button");if(!b)return;
+ const b=e.target.closest("button");if(!b||guard)return;
  if(b.dataset.deleteClothes){
   if(!confirm("Excluir esta peça?"))return;
   data.clothes=data.clothes.filter(g=>g?.id!==b.dataset.deleteClothes);if(persist())renderAll();
@@ -348,16 +447,54 @@ $("importFile").addEventListener("change",async()=>{
    alert("Backup não importado. Foram encontradas informações inválidas:"+list(errors)+"\n\nOs cadastros atuais não foram alterados.");
    return;
   }
-  let question="Importar este backup substituirá os cadastros atuais. Deseja continuar?";
+  if(guard?.kind==="conflict"){alert("Nada foi importado: os dados foram alterados em outra aba ou janela. Recarregue a página.");return;}
+  const recovering=guard?.kind==="protected";
+  let question=recovering
+   ?`RECUPERAÇÃO: os dados salvos atualmente neste navegador (ilegíveis ou inválidos) serão SUBSTITUÍDOS por este backup. A cópia de segurança do conteúdo original continuará guardada na chave “${guard.copyKey}”. Deseja substituir os dados atuais e sair do modo protegido?`
+   :"Importar este backup substituirá os cadastros atuais. Deseja continuar?";
   if(warnings.length)question="Atenção: o backup contém informações a corrigir:"+list(warnings)+
    `\n\nEsses cadastros serão importados sem alteração e aparecerão como “${UNNAMED}” até que você informe o nome em “Editar medidas”.\n\n`+question;
+  if(recovering){recoverFrom(parsed,question);return;}
   if(!confirm(question))return;
   const previous=data;data=parsed;
   if(persist()){resetClient();resetClothes();renderAll();alert("Backup importado.");}else data=previous;
  }catch(e){alert("Não foi possível importar o backup. Os cadastros atuais não foram alterados.");}
  finally{$("importFile").value="";}
 });
-renderAll();switchTab("clients");
+// Recuperação explícita: só substitui a chave KEY se a cópia existir e o conteúdo salvo não tiver mudado.
+function recoverFrom(parsed,question){
+ const g=guard;
+ if(!g||g.kind!=="protected")return;
+ if(!g.copyKey){alert("Recuperação indisponível: a cópia de segurança do conteúdo original ainda não foi criada. Nada foi alterado.");return;}
+ const stillSame=()=>{try{return localStorage.getItem(KEY)===g.raw&&localStorage.getItem(g.copyKey)===g.raw;}catch(e){return false;}};
+ const changedMsg="Recuperação cancelada: o conteúdo salvo ou a cópia de segurança mudou desde que esta página foi aberta (talvez em outra aba). Nada foi substituído. Recarregue a página.";
+ if(!stillSame()){alert(changedMsg);return;}
+ if(!confirm(question))return;
+ if(!stillSame()){alert(changedMsg);return;}
+ const json=JSON.stringify(parsed);
+ try{localStorage.setItem(KEY,json);}
+ catch(e){alert("O navegador não conseguiu gravar o backup. Os dados salvos continuam como estavam e o modo protegido foi mantido.");return;}
+ storedRaw=json;data=parsed;guard=null;
+ applyGuard();resetClient();resetClothes();renderAll();
+ alert(`Backup recuperado. O modo protegido foi encerrado. A cópia do conteúdo original continua guardada na chave “${g.copyKey}”.`);
+}
+$("guardBanner").addEventListener("click",e=>{
+ const b=e.target.closest("button[data-guard]");if(!b)return;
+ const action=b.dataset.guard;
+ if(action==="reload")location.reload();
+ else if(action==="download")downloadOriginal();
+ else if(action==="retry"&&guard?.kind==="protected"){preserveCopy();applyGuard();}
+ else if(action==="recover"&&guard?.kind==="protected"&&guard.copyKey){switchTab("backup");$("importFile").click();}
+});
+// Outra aba alterou os dados: bloqueia as gravações desta aba em vez de sobrescrever.
+window.addEventListener("storage",e=>{
+ if(guard||(e.key!==KEY&&e.key!==null))return;
+ let current;
+ try{current=localStorage.getItem(KEY);}catch(err){current=undefined;}
+ if(current!==storedRaw)enterConflict();
+});
+readStoredData();
+applyGuard();renderAll();switchTab("clients");
 })();
 </script>
 </body>
