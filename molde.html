@@ -70,7 +70,7 @@ button:disabled{opacity:.5;cursor:not-allowed}
  </div>
  <div>
   <label for="hipDepth">Altura cintura–quadril (cm)</label>
-  <input id="hipDepth" type="number" min="15" max="35" step="0.5" value="20">
+  <input id="hipDepth" type="number" min="15" max="35" step="0.1" value="20">
  </div>
  <div>
   <label for="waistEase">Folga total na cintura (cm)</label>
@@ -88,7 +88,8 @@ O desenho representa uma base simplificada de frente e costas. A distribuição 
 
 <button id="generate">Gerar prévia do molde</button>
 <button class="secondary" id="print" disabled>Imprimir / salvar PDF A4</button>
-<p id="error" role="status"></p>
+<p id="notice" class="note" role="status" hidden></p>
+<p id="error" role="alert"></p>
 </section>
 
 <section id="result" class="card">
@@ -122,8 +123,37 @@ Na impressão, escolha papel A4, escala 100% ou tamanho real e desative “ajust
 "use strict";
 
 const $ = id => document.getElementById(id);
+const STORAGE_KEY = "meuAtelie_v1";
+const DEFAULT_HIP_DEPTH = "20";
+// Campo do formulário, chave da medida no cadastro (index.html) e nome exibido.
+const CLIENT_FIELDS = [
+ ["waist", "cintura", "cintura"],
+ ["hip", "quadril", "quadril"],
+ ["length", "saia", "comprimento da saia"],
+ ["hipDepth", "cinturaQuadril", "altura cintura–quadril"]
+];
 let loadedClients = [];
 let generated = false;
+
+const isObj = v => v !== null && typeof v === "object" && !Array.isArray(v);
+
+function clientLabel(c){
+ return typeof c.name === "string" && c.name.trim() ? c.name.trim() : "Cliente sem nome";
+}
+
+function showNotice(message){
+ $("notice").textContent = message;
+ $("notice").hidden = !message;
+}
+
+// A prévia e a impressão deixam de valer quando as medidas mudam.
+function invalidatePreview(){
+ generated = false;
+ $("print").disabled = true;
+ $("result").style.display = "none";
+ $("preview").innerHTML = "";
+ $("printArea").innerHTML = "";
+}
 
 function esc(value){
  return String(value ?? "").replace(/[&<>"']/g, ch => ({
@@ -137,46 +167,98 @@ function esc(value){
 
 function loadClients(){
  const select = $("client");
+ const previous = select.value;
  try{
-  const data = JSON.parse(localStorage.getItem("meuAtelie_v1") || "{}");
-  loadedClients = Array.isArray(data.clients) ? data.clients : [];
-  select.innerHTML =
-   '<option value="">Informar medidas manualmente</option>' +
-   loadedClients.map(c =>
-    '<option value="' + esc(c.id) + '">' +
-    esc(c.name || "Cliente sem nome") +
-    '</option>'
-   ).join("");
+  const data = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+  loadedClients = isObj(data) && Array.isArray(data.clients)
+   ? data.clients.filter(c =>
+      isObj(c) && typeof c.id === "string" && c.id.trim() !== "")
+   : [];
  }catch(error){
   loadedClients = [];
-  select.innerHTML =
-   '<option value="">Informar medidas manualmente</option>';
  }
+ select.innerHTML =
+  '<option value="">Informar medidas manualmente</option>' +
+  loadedClients.map(c =>
+   '<option value="' + esc(c.id) + '">' + esc(clientLabel(c)) + '</option>'
+  ).join("");
+ if(previous && loadedClients.some(c => c.id === previous)){
+  select.value = previous;
+ }else if(previous){
+  select.value = "";
+  applyClient(null);
+  showNotice(
+   "A cliente selecionada não está mais cadastrada. " +
+   "Os campos de medida foram limpos.");
+ }
+}
+
+function measurementValue(measurements, key){
+ const v = measurements[key];
+ if(v === "" || v == null) return null;
+ const n = Number(v);
+ return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+// Preenche ou limpa todos os campos de medida. Nunca reaproveita valores
+// da cliente anterior: medida ausente = campo vazio (ou o padrão, na
+// altura cintura–quadril).
+function applyClient(client){
+ invalidatePreview();
+ $("error").textContent = "";
+ const measurements =
+  client && isObj(client.measurements) ? client.measurements : {};
+ const loaded = [], missing = [], outOfRange = [];
+
+ CLIENT_FIELDS.forEach(([field, key, label]) => {
+  const input = $(field);
+  const value = client ? measurementValue(measurements, key) : null;
+  if(value != null){
+   input.value = String(value);
+   loaded.push(label);
+   if(value < Number(input.min) || value > Number(input.max))
+    outOfRange.push(label);
+  }else{
+   input.value = field === "hipDepth" ? DEFAULT_HIP_DEPTH : "";
+   if(client) missing.push(label);
+  }
+ });
+
+ if(!client){
+  showNotice("Campos de medida limpos. Preencha as medidas manualmente.");
+  return;
+ }
+ const parts = [];
+ parts.push(loaded.length
+  ? `Medidas de ${clientLabel(client)} carregadas: ${loaded.join(", ")}.`
+  : `${clientLabel(client)} não tem nenhuma das medidas usadas neste molde.`);
+ const missingRequired = missing.filter(l => l !== "altura cintura–quadril");
+ if(missingRequired.length)
+  parts.push(`Não cadastradas (preencha antes de gerar): ${missingRequired.join(", ")}.`);
+ if(missing.includes("altura cintura–quadril"))
+  parts.push(`Altura cintura–quadril não cadastrada: usado o padrão de ${DEFAULT_HIP_DEPTH} cm; confira.`);
+ if(outOfRange.length)
+  parts.push(`Fora dos limites do gerador: ${outOfRange.join(", ")}.`);
+ parts.push("Confira os valores antes de gerar o molde.");
+ showNotice(parts.join(" "));
 }
 
 loadClients();
 
 $("client").addEventListener("change", function(){
- const client = loadedClients.find(
-  c => String(c.id) === this.value
- );
- if(!client) return;
-
- const measurements = client.measurements || {};
-
- if(measurements.cintura != null && measurements.cintura !== "")
-  $("waist").value = measurements.cintura;
-
- if(measurements.quadril != null && measurements.quadril !== "")
-  $("hip").value = measurements.quadril;
-
- if(measurements.saia != null && measurements.saia !== "")
-  $("length").value = measurements.saia;
-
- // A altura do quadril não é inferida das outras medidas.
- $("error").textContent =
-  "Confira as medidas carregadas. Ajuste a altura do quadril se necessário.";
+ const client = loadedClients.find(c => c.id === this.value) || null;
+ applyClient(client);
 });
+
+["waist", "hip", "length", "hipDepth", "waistEase", "hipEase"].forEach(id =>
+ $(id).addEventListener("input", () => { if(generated) invalidatePreview(); })
+);
+
+// Atualiza a lista quando os cadastros mudam em outra aba ou ao voltar à página.
+window.addEventListener("storage", e => {
+ if(e.key === STORAGE_KEY || e.key === null) loadClients();
+});
+window.addEventListener("pageshow", e => { if(e.persisted) loadClients(); });
 
 function generate(){
  $("error").textContent = "";
