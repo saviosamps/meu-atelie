@@ -1,0 +1,297 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meu Ateliê — Calça Masculina</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f7f3ef;color:#342b2b;font:16px Arial,sans-serif}
+header{padding:20px;background:#fff;border-bottom:1px solid #e6dcd8}
+header h1{margin:0;color:#8a5966;font-family:Georgia,serif}
+main{max-width:1050px;margin:auto;padding:16px}
+.card{background:#fff;padding:18px;border:1px solid #e6dcd8;border-radius:12px;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px}
+label{display:block;font-size:13px;color:#766a6a;margin-bottom:5px}
+input,select{width:100%;padding:10px;border:1px solid #d8ceca;border-radius:7px;font-size:16px}
+button,.btn{display:inline-block;padding:11px 14px;background:#8a5966;color:#fff;border:0;border-radius:8px;margin:8px 5px 0 0;cursor:pointer;text-decoration:none}
+.small{font-size:13px;line-height:1.5;color:#766a6a}
+.note{padding:12px;background:#f8f0e6;border-radius:8px;font-size:13px;line-height:1.5}
+#error{color:#a12e2e}
+#result{display:none}
+#preview{overflow:auto}
+#preview svg{max-width:100%;height:auto}
+#printArea{display:none}
+@media print{
+ @page{size:A4 portrait;margin:0}
+ body{margin:0;background:white}
+ header,main{display:none!important}
+ #printArea{display:block!important}
+ .tile{width:190mm;height:277mm;overflow:hidden;break-after:page}
+ .tile:last-child{break-after:auto}
+ .tile svg{width:190mm;height:277mm;display:block}
+}
+</style>
+</head>
+<body>
+<header>
+<h1>Meu Ateliê</h1>
+<p>Modelagem de calça masculina</p>
+</header>
+<main>
+<section class="card">
+<h2>Calça masculina reta</h2>
+<p class="small">Informe as medidas corporais em centímetros, sem folgas. O gerador acrescenta as folgas e as margens indicadas. A base é experimental e precisa ser validada em tecido de prova.</p>
+<div class="grid">
+<div><label>Cliente</label><select id="client"><option value="">Medidas manuais</option></select></div>
+<div><label>Cintura (cm)</label><input id="waist" type="number" min="55" max="180"></div>
+<div><label>Quadril/assento (cm)</label><input id="hip" type="number" min="65" max="200"></div>
+<div><label>Altura do gancho (cm)</label><input id="rise" type="number" min="18" max="45"></div>
+<div><label>Comprimento lateral (cm)</label><input id="outseam" type="number" min="65" max="140"></div>
+<div><label>Entreperna (cm)</label><input id="inseam" type="number" min="45" max="110"></div>
+<div><label>Coxa (contorno, cm)</label><input id="thigh" type="number" min="35" max="100"></div>
+<div><label>Joelho (contorno, cm)</label><input id="knee" type="number" min="25" max="80"></div>
+<div><label>Boca da calça (contorno, cm)</label><input id="hemWidth" type="number" min="25" max="80"></div>
+<div><label>Altura do cós pronto (cm)</label><input id="waistHeight" type="number" value="4" min="2" max="8" step=".5"></div>
+<div><label>Folga do quadril (cm)</label><input id="hipEase" type="number" value="6" min="2" max="14" step=".5"></div>
+<div><label>Folga da cintura (cm)</label><input id="waistEase" type="number" value="2" min="0" max="8" step=".5"></div>
+<div><label>Folga da coxa (cm)</label><input id="thighEase" type="number" value="6" min="2" max="14" step=".5"></div>
+<div><label>Margem de costura (cm)</label><input id="seam" type="number" value="1.5" min=".5" max="2.5" step=".1"></div>
+<div><label>Margem da barra (cm)</label><input id="hem" type="number" value="4" min="2" max="8" step=".5"></div>
+<div><label>Extensão da braguilha (cm)</label><input id="fly" type="number" value="3" min="2" max="5" step=".5"></div>
+<div><label>Indicação de bolso frontal</label><select id="pocket"><option value="yes">Incluir</option><option value="no">Não incluir</option></select></div>
+</div>
+<button id="generate">Gerar molde</button>
+<button id="print" disabled>Imprimir / salvar PDF A4</button>
+<a class="btn" href="index.html">Voltar ao Meu Ateliê</a>
+<p id="error"></p><p id="status" class="small"></p>
+</section>
+<section class="card" id="result">
+<h2>Prévia do molde</h2>
+<p id="summary" class="note"></p>
+<div id="preview"></div>
+</section>
+<section class="card">
+<h2>Instruções</h2>
+<p class="small">Imprima em A4, escala 100% ou tamanho real, desativando “ajustar à página”. O quadrado de controle deve medir exatamente 5 × 5 cm. A paginação usa sobreposição nominal de 10 mm.</p>
+<p class="note">Esta é uma base geométrica inicial, não uma modelagem profissional validada. A curva do gancho, o assento, as costuras internas, os bolsos, o cós e a braguilha precisam ser conferidos e ajustados no protótipo. O desenho de bolso é uma referência de posição, não um conjunto completo de peças de bolso.</p>
+</section>
+</main>
+<div id="printArea"></div>
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const KEY="meuAtelie_v1";
+const NS="http://www.w3.org/2000/svg";
+let generated=false;
+
+function loadClients(){
+  let data={};
+  try{data=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){}
+  const clients=Array.isArray(data.clients)?data.clients:[];
+  $("client").innerHTML='<option value="">Medidas manuais</option>'+
+    clients.filter(c=>c&&typeof c.id==="string").map(c=>
+      '<option value="'+esc(c.id)+'">'+esc(c.name||"Cliente sem nome")+'</option>'
+    ).join("");
+}
+function esc(s){
+  return String(s??"").replace(/[&<>"']/g,c=>({
+    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+  }[c]));
+}
+function invalidate(){
+  generated=false;
+  $("print").disabled=true;
+  $("result").style.display="none";
+  $("preview").innerHTML="";
+  $("printArea").innerHTML="";
+}
+function fillClient(){
+  invalidate();
+  let data={};
+  try{data=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(e){}
+  const c=(data.clients||[]).find(x=>x&&x.id===$("client").value);
+  if(!c)return;
+  const m=c.measurements||{};
+  const map={
+    waist:"cintura",hip:"quadril",outseam:"calca",
+    inseam:"entreperna",thigh:"coxa",knee:"joelho",
+    hemWidth:"tornozelo",rise:"gancho"
+  };
+  Object.entries(map).forEach(([field,key])=>{
+    if(Number(m[key])>0)$(field).value=m[key];
+  });
+  $("status").textContent="Medidas carregadas. Confira os valores e complete os campos vazios.";
+}
+loadClients();
+$("client").addEventListener("change",fillClient);
+window.addEventListener("storage",e=>{
+  if(e.key===KEY||e.key===null)loadClients();
+});
+["waist","hip","rise","outseam","inseam","thigh","knee","hemWidth",
+ "waistHeight","hipEase","waistEase","thighEase","seam","hem","fly","pocket"
+].forEach(id=>$(id).addEventListener("input",invalidate));
+
+function generate(){
+  $("error").textContent="";
+  const limits={
+    waist:[55,180],hip:[65,200],rise:[18,45],outseam:[65,140],
+    inseam:[45,110],thigh:[35,100],knee:[25,80],hemWidth:[25,80],
+    waistHeight:[2,8],hipEase:[2,14],waistEase:[0,8],
+    thighEase:[2,14],seam:[.5,2.5],hem:[2,8],fly:[2,5]
+  };
+  const v={};
+  for(const [id,range] of Object.entries(limits)){
+    const raw=$(id).value.trim(),n=Number(raw);
+    if(!raw||!Number.isFinite(n)||n<range[0]||n>range[1]){
+      $("error").textContent="Preencha todos os campos com valores dentro dos limites indicados.";
+      return;
+    }
+    v[id]=n;
+  }
+  if(v.inseam>=v.outseam||v.rise>=v.outseam){
+    $("error").textContent="A entreperna e a altura do gancho devem ser menores que o comprimento lateral.";
+    return;
+  }
+  if(v.hip<=v.waist*.75){
+    $("error").textContent="Confira as medidas de cintura e quadril.";
+    return;
+  }
+
+  const mm=n=>n*10;
+  const hip=mm(v.hip+v.hipEase);
+  const waist=mm(v.waist+v.waistEase);
+  const qHip=hip/4;
+  const qWaist=waist/4;
+  const rise=mm(v.rise);
+  const out=mm(v.outseam);
+  const inseam=mm(v.inseam);
+  const kneeY=out-inseam*.48;
+  const knee=mm(v.knee+2)/2;
+  const hem=mm(v.hemWidth)/2;
+  const seam=mm(v.seam);
+  const hemAllow=mm(v.hem);
+  const margin=45,top=65,gap=70;
+  const fx=margin,bx=fx+qHip+gap;
+  const width=bx+qHip+margin;
+  const height=top+out+hemAllow+150;
+  const frontCrotch=Math.max(mm(3),qHip*.13);
+  const backCrotch=Math.max(mm(7),qHip*.23);
+
+  const frontOuterK=fx+qHip*.70+knee/2;
+  const frontInnerK=fx+qHip*.23-knee/2;
+  const frontOuterH=fx+qHip*.67+hem/2;
+  const frontInnerH=fx+qHip*.25-hem/2;
+  const backOuterK=bx+qHip*.72+knee/2;
+  const backInnerK=bx+qHip*.24-knee/2;
+  const backOuterH=bx+qHip*.69+hem/2;
+  const backInnerH=bx+qHip*.24-hem/2;
+
+  const front=[
+    "M "+(fx+qHip*.08)+" "+top,
+    "L "+(fx+qHip*.91)+" "+top,
+    "C "+(fx+qHip*.94)+" "+(top+rise*.20)+" "+(fx+qHip*.78)+" "+(top+rise*.31)+" "+(fx+qHip*.70)+" "+(top+rise*.47),
+    "L "+frontOuterK+" "+(top+kneeY),
+    "L "+frontOuterH+" "+(top+out),
+    "L "+frontInnerH+" "+(top+out),
+    "L "+frontInnerK+" "+(top+kneeY),
+    "C "+(fx+qHip*.18)+" "+(top+rise*.88)+" "+(fx+qHip*.10)+" "+(top+rise*.74)+" "+(fx+frontCrotch)+" "+(top+rise*.62),
+    "C "+(fx+frontCrotch*.75)+" "+(top+rise*.48)+" "+(fx+frontCrotch*.35)+" "+(top+rise*.25)+" "+(fx+qHip*.08)+" "+top+" Z"
+  ].join(" ");
+
+  const back=[
+    "M "+(bx+qHip*.06)+" "+top,
+    "L "+(bx+qHip*.91)+" "+top,
+    "C "+(bx+qHip*.96)+" "+(top+rise*.20)+" "+(bx+qHip*.82)+" "+(top+rise*.32)+" "+(bx+qHip*.74)+" "+(top+rise*.48),
+    "L "+backOuterK+" "+(top+kneeY),
+    "L "+backOuterH+" "+(top+out),
+    "L "+backInnerH+" "+(top+out),
+    "L "+backInnerK+" "+(top+kneeY),
+    "C "+(bx+qHip*.16)+" "+(top+rise*.87)+" "+(bx+qHip*.10)+" "+(top+rise*.74)+" "+(bx+backCrotch)+" "+(top+rise*.62),
+    "C "+(bx+backCrotch*1.08)+" "+(top+rise*.43)+" "+(bx+backCrotch*.50)+" "+(top+rise*.25)+" "+(bx+qHip*.06)+" "+top+" Z"
+  ].join(" ");
+
+  function panel(label,path,x,isBack){
+    const grain=x+qHip*.5;
+    const hipY=top+rise*.70;
+    let darts="";
+    if(isBack){
+      const dw=Math.max(mm(1.5),(qHip-qWaist)*.22);
+      darts='<path d="M '+(x+qHip*.42-dw/2)+' '+top+
+        ' L '+(x+qHip*.42)+' '+(top+mm(12))+
+        ' L '+(x+qHip*.42+dw/2)+' '+top+
+        ' M '+(x+qHip*.69-dw/2)+' '+top+
+        ' L '+(x+qHip*.69)+' '+(top+mm(10))+
+        ' L '+(x+qHip*.69+dw/2)+' '+top+
+        '" fill="none" stroke="#222" stroke-width=".8"/>';
+    }
+    let pocket="";
+    if(!isBack&&$("pocket").value==="yes"){
+      pocket='<path d="M '+(x+qHip*.15)+' '+(top+mm(8))+
+        ' Q '+(x+qHip*.28)+' '+(top+mm(22))+' '+(x+qHip*.42)+' '+(top+mm(26))+
+        '" fill="none" stroke="#6b7e8a" stroke-width=".8" stroke-dasharray="3 2"/>';
+    }
+    return '<g><path d="'+path+'" fill="none" stroke="#222" stroke-width="1"/>'+
+      '<path d="M '+(x-seam)+' '+(top-seam)+' L '+(x+qHip+seam)+' '+(top-seam)+
+      ' L '+(x+qHip+seam)+' '+(top+out+hemAllow)+' L '+(x-seam)+' '+(top+out+hemAllow)+
+      ' Z" fill="none" stroke="#999" stroke-width=".5" stroke-dasharray="3 2"/>'+
+      darts+pocket+
+      '<line x1="'+grain+'" y1="'+(top+rise*.38)+'" x2="'+grain+'" y2="'+(top+out*.88)+'" stroke="#387a65" stroke-width=".7" stroke-dasharray="5 3"/>'+
+      '<line x1="'+x+'" y1="'+hipY+'" x2="'+(x+qHip)+'" y2="'+hipY+'" stroke="#387a65" stroke-width=".5" stroke-dasharray="3 2"/>'+
+      '<text x="'+(x+qHip/2)+'" y="'+(top-12)+'" text-anchor="middle" font-size="6">'+label+'</text>'+
+      '<text x="'+grain+'" y="'+(top+out*.68)+'" text-anchor="middle" font-size="4.5">FIO DO TECIDO</text>'+
+      '<text x="'+(x+qHip/2)+'" y="'+(top+out+hemAllow+10)+'" text-anchor="middle" font-size="4.5">BARRA</text></g>';
+  }
+
+  const bandX=margin;
+  const bandY=top+out+hemAllow+40;
+  const bandLen=waist+mm(v.waistHeight*2)+seam*2;
+  const bandH=mm(v.waistHeight)+seam*2;
+  const flyX=margin,flyY=bandY+bandH+25,flyW=mm(v.fly),flyH=mm(v.rise*.55);
+
+  const drawing=
+    '<rect width="'+width+'" height="'+height+'" fill="white"/>'+
+    '<text x="'+margin+'" y="15" font-size="7">MEU ATELIÊ — CALÇA MASCULINA RETA</text>'+
+    '<text x="'+margin+'" y="25" font-size="4.5">Cintura '+v.waist+' cm | Quadril '+v.hip+' cm | Lateral '+v.outseam+' cm | Entreperna '+v.inseam+' cm</text>'+
+    panel("FRENTE — CORTAR 2 ESPELHADAS",front,fx,false)+
+    panel("COSTAS — CORTAR 2 ESPELHADAS",back,bx,true)+
+    '<rect x="'+bandX+'" y="'+bandY+'" width="'+bandLen+'" height="'+bandH+'" fill="none" stroke="#222" stroke-width=".8"/>'+
+    '<text x="'+bandX+'" y="'+(bandY-5)+'" font-size="5">CÓS — verificar comprimento e dividir se necessário</text>'+
+    '<path d="M '+flyX+' '+flyY+' L '+(flyX+flyW)+' '+flyY+' L '+(flyX+flyW)+' '+(flyY+flyH)+' L '+flyX+' '+(flyY+flyH)+' Z" fill="none" stroke="#222" stroke-width=".8"/>'+
+    '<text x="'+(flyX+flyW+5)+'" y="'+(flyY+10)+'" font-size="4.5">VISTA SIMPLIFICADA DA BRAGUILHA</text>'+
+    '<rect x="'+margin+'" y="'+(height-70)+'" width="50" height="50" fill="none" stroke="#222" stroke-width=".8"/>'+
+    '<text x="'+margin+'" y="'+(height-74)+'" font-size="4.5">QUADRADO DE ESCALA: 5 × 5 cm</text>';
+
+  $("preview").innerHTML='<svg xmlns="'+NS+'" width="'+width+'mm" height="'+height+'mm" viewBox="0 0 '+width+' '+height+'">'+drawing+'</svg>';
+
+  const pageW=190,pageH=277,stepW=180,stepH=267,overlap=10;
+  const cols=Math.max(1,Math.ceil((width-overlap)/stepW));
+  const rows=Math.max(1,Math.ceil((height-overlap)/stepH));
+  const pages=[];
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const px=c*stepW,py=r*stepH;
+      pages.push('<div class="tile"><svg xmlns="'+NS+
+        '" width="190mm" height="277mm" viewBox="'+px+' '+py+' '+pageW+' '+pageH+'">'+
+        drawing+'<path d="M '+(px+5)+' '+(py+10)+' h 8 M '+(px+9)+' '+(py+6)+' v 8" stroke="#777" stroke-width=".5" fill="none"/>'+
+        '<text x="'+(px+16)+'" y="'+(py+10)+'" font-size="4">Folha '+(r+1)+'-'+(c+1)+'</text></svg></div>');
+    }
+  }
+  $("printArea").innerHTML=pages.join("");
+  $("summary").textContent="Cintura com folga: "+(v.waist+v.waistEase).toFixed(1)+
+    " cm. Quadril com folga: "+(v.hip+v.hipEase).toFixed(1)+
+    " cm. Gancho: "+v.rise+" cm. Total de folhas A4: "+pages.length+
+    ". Confira a escala e o caimento antes de usar.";
+  $("result").style.display="block";
+  $("print").disabled=false;
+  generated=true;
+  $("status").textContent="Prévia gerada: "+cols+" coluna(s) × "+rows+" linha(s).";
+}
+$("generate").addEventListener("click",generate);
+$("print").addEventListener("click",()=>{if(generated)window.print()});
+})();
+</script>
+</body>
+</html>
