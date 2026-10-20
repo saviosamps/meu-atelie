@@ -173,9 +173,12 @@ function checkData(d){
   if(c.measurements!=null&&!isObj(c.measurements))errors.push(`${pos}: medidas em formato inválido.`);
   if(!hasName(c))warnings.push(`${pos}: sem nome ou com nome contendo apenas espaços.`);
  });
+ const garmentIds=new Set();
  d.clothes.forEach((g,i)=>{
   if(!isObj(g))errors.push(`Peça nº ${i+1}: registro em formato inválido.`);
   else if(!hasValidId(g))errors.push(`Peça nº ${i+1}: sem identificador válido.`);
+  else if(garmentIds.has(g.id))errors.push(`Peça nº ${i+1}: identificador repetido.`);
+  else garmentIds.add(g.id);
  });
  return {errors,warnings};
 }
@@ -350,7 +353,7 @@ $("importFile").addEventListener("change",async()=>{
    `\n\nEsses cadastros serão importados sem alteração e aparecerão como “${UNNAMED}” até que você informe o nome em “Editar medidas”.\n\n`+question;
   if(!confirm(question))return;
   const previous=data;data=parsed;
-  if(persist()){renderAll();alert("Backup importado.");}else data=previous;
+  if(persist()){resetClient();resetClothes();renderAll();alert("Backup importado.");}else data=previous;
  }catch(e){alert("Não foi possível importar o backup. Os cadastros atuais não foram alterados.");}
  finally{$("importFile").value="";}
 });
