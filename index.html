@@ -1,0 +1,300 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meu Ateliê</title>
+<style>
+:root{--bg:#f7f3ef;--card:#fff;--ink:#342b2b;--muted:#817575;--accent:#8a5966;--line:#e9dfdc}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px Arial,sans-serif}
+header{background:#fff;padding:22px max(18px,calc((100% - 1050px)/2));border-bottom:1px solid var(--line)}
+header h1{margin:0;color:var(--accent);font-family:Georgia,serif;font-size:30px}
+header p{margin:7px 0 0;color:var(--muted);font-size:14px}
+main{max-width:1050px;margin:auto;padding:20px}
+nav{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px}
+button,.btn{border:0;border-radius:9px;padding:11px 14px;background:var(--accent);color:white;cursor:pointer;font-size:14px}
+button.secondary{background:#eee5e3;color:var(--ink)}
+button.danger{background:#a63e3e}
+button:disabled{opacity:.5}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:18px;margin-bottom:16px}
+h2{font-size:21px;margin:0 0 15px}
+h3{font-size:17px;margin:20px 0 10px}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:5px}
+input,textarea,select{width:100%;padding:11px;border:1px solid #d9ceca;border-radius:8px;background:white;color:var(--ink);font:inherit}
+textarea{min-height:75px;resize:vertical}
+.field{min-width:0}
+.fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:12px;margin-bottom:14px}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.item{padding:14px 0;border-bottom:1px solid var(--line)}
+.item:last-child{border-bottom:0}
+.item strong{display:block;margin-bottom:6px}
+.muted{color:var(--muted);font-size:13px;line-height:1.5}
+.hidden{display:none!important}
+.tag{display:inline-block;background:#f2e7e8;color:#754653;border-radius:20px;padding:5px 9px;font-size:12px;margin:3px 0}
+img.reference{display:block;max-width:100%;max-height:240px;object-fit:contain;border-radius:8px;margin-top:10px}
+.notice{font-size:13px;line-height:1.5;color:#725b48;background:#f8f0e6;padding:12px;border-radius:9px}
+.empty{padding:22px 0;color:var(--muted);text-align:center}
+footer{text-align:center;padding:20px;color:var(--muted);font-size:12px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Meu Ateliê</h1>
+  <p>Medidas, clientes e criação de peças em um só lugar.</p>
+</header>
+<main>
+  <nav>
+    <button data-tab="clients">Clientes</button>
+    <button class="secondary" data-tab="clothes">Peças de roupa</button>
+    <button class="secondary" data-tab="backup">Backup de dados</button>
+  </nav>
+
+  <section id="clients">
+    <div class="panel">
+      <h2 id="clientTitle">Cadastrar cliente</h2>
+      <form id="clientForm">
+        <input id="clientId" type="hidden">
+        <div class="fields">
+          <div class="field"><label for="name">Nome *</label><input id="name" required maxlength="100"></div>
+          <div class="field"><label for="height">Altura (cm)</label><input id="height" type="number" min="1" max="300" step="0.1"></div>
+        </div>
+        <label for="observations">Observações e preferências</label>
+        <textarea id="observations" placeholder="Preferências de caimento, ajustes, alergias a tecidos..."></textarea>
+        <h3>Medidas corporais (cm)</h3>
+        <div id="measurementFields" class="fields"></div>
+        <div class="actions">
+          <button type="submit">Salvar cliente</button>
+          <button type="button" class="secondary" id="cancelClient">Limpar formulário</button>
+        </div>
+      </form>
+    </div>
+    <div class="panel">
+      <h2>Meus clientes</h2>
+      <input id="searchClients" placeholder="Buscar por nome...">
+      <div id="clientList"></div>
+    </div>
+  </section>
+
+  <section id="clothes" class="hidden">
+    <div class="panel">
+      <h2 id="clothesTitle">Registrar peça de roupa</h2>
+      <form id="clothesForm">
+        <input id="clothesId" type="hidden">
+        <div class="fields">
+          <div class="field"><label for="owner">Cliente *</label><select id="owner" required></select></div>
+          <div class="field"><label for="garmentName">Peça *</label><input id="garmentName" required placeholder="Ex.: saia reta"></div>
+          <div class="field"><label for="fabric">Tecido</label><input id="fabric" placeholder="Ex.: sarja, viscose"></div>
+          <div class="field"><label for="stage">Etapa</label>
+            <select id="stage"><option>Ideia</option><option>Modelagem</option><option>Costura</option><option>Pronta</option></select>
+          </div>
+        </div>
+        <div class="fields">
+          <div class="field"><label for="waist">Altura da cintura</label><select id="waist"><option>Natural</option><option>Alta</option><option>Baixa</option></select></div>
+          <div class="field"><label for="closure">Fechamento</label><select id="closure"><option>Zíper</option><option>Botões</option><option>Elástico</option><option>Amarração</option><option>Sem fechamento</option><option>Outro</option></select></div>
+        </div>
+        <label for="details">Detalhes da peça</label>
+        <textarea id="details" placeholder="Comprimento, folga, bolsos, fenda, acabamento..."></textarea>
+        <div class="field" style="margin-top:12px"><label for="reference">Imagem de referência (opcional)</label><input id="reference" type="file" accept="image/*"><p class="muted">A imagem será reduzida para ocupar menos espaço. Use imagens de teste nesta primeira versão.</p></div>
+        <div id="imagePreview"></div>
+        <div class="actions">
+          <button type="submit">Salvar peça</button>
+          <button type="button" class="secondary" id="cancelClothes">Limpar formulário</button>
+        </div>
+      </form>
+    </div>
+    <div class="panel">
+      <h2>Peças registradas</h2>
+      <div id="clothesList"></div>
+    </div>
+  </section>
+
+  <section id="backup" class="hidden">
+    <div class="panel">
+      <h2>Backup e transferência</h2>
+      <p>Exporte seus cadastros para um arquivo e guarde-o em um local privado. Para transferir os dados para outro dispositivo, importe esse arquivo nele.</p>
+      <div class="notice">Os dados ficam neste navegador. Não existe sincronização automática entre computador e tablet. O repositório público contém o código do aplicativo, não deve conter seus arquivos de backup.</div>
+      <div class="actions">
+        <button id="exportData">Exportar backup</button>
+        <button class="secondary" id="importButton">Importar backup</button>
+        <input id="importFile" type="file" accept=".json,application/json" class="hidden">
+      </div>
+      <p class="muted">Importar um backup substitui os cadastros atuais deste navegador. Exporte os dados atuais antes de importar.</p>
+      <h3>Estado deste navegador</h3>
+      <p id="storageStatus" class="muted"></p>
+    </div>
+  </section>
+  <footer>Meu Ateliê · Versão inicial · Faça backups regularmente.</footer>
+</main>
+
+<script>
+(function(){
+"use strict";
+const KEY="meuAtelie_v1";
+const measurements=[
+ ["Pescoço","pescoço"],["Ombro","ombro"],["Tórax / busto","busto"],
+ ["Abaixo do busto","abaixoBusto"],["Cintura","cintura"],["Abdômen","abdomen"],
+ ["Quadril alto","quadrilAlto"],["Quadril","quadril"],["Comprimento do tronco","tronco"],
+ ["Altura do busto","alturaBusto"],["Distância entre bustos","distanciaBustos"],
+ ["Comprimento da manga","manga"],["Contorno do braço","braco"],["Contorno do punho","punho"],
+ ["Comprimento da blusa","blusa"],["Cintura ao quadril","cinturaQuadril"],
+ ["Gancho","gancho"],["Comprimento da calça","calca"],["Entreperna","entreperna"],
+ ["Coxa","coxa"],["Joelho","joelho"],["Panturrilha","panturrilha"],
+ ["Tornozelo","tornozelo"],["Comprimento da saia","saia"],["Comprimento do vestido","vestido"],
+ ["Altura do corpo","alturaCorpo"],["Contorno da cabeça","cabeca"]
+];
+const $=id=>document.getElementById(id);
+let data={clients:[],clothes:[]},currentImage="";
+try{
+ const saved=localStorage.getItem(KEY);
+ if(saved){const parsed=JSON.parse(saved);if(Array.isArray(parsed.clients)&&Array.isArray(parsed.clothes))data=parsed;}
+}catch(e){alert("Não foi possível ler os dados salvos. Faça a recuperação usando um backup, se houver.");}
+function persist(){
+ try{localStorage.setItem(KEY,JSON.stringify(data));return true;}
+ catch(e){alert("O navegador não conseguiu salvar. O armazenamento pode estar cheio. Exporte um backup e remova imagens grandes ou antigas.");return false;}
+}
+function safe(value){return String(value??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+function makeMeasurementFields(){
+ $("measurementFields").innerHTML=measurements.map(([label,key])=>
+ `<div class="field"><label for="m_${key}">${safe(label)} (cm)</label><input id="m_${key}" type="number" min="0" max="500" step="0.1" inputmode="decimal"></div>`
+ ).join("");
+}
+function resetClient(){
+ $("clientForm").reset();$("clientId").value="";$("clientTitle").textContent="Cadastrar cliente";
+ measurements.forEach(([,key])=>$("m_"+key).value="");
+}
+function renderClients(){
+ const query=$("searchClients").value.trim().toLocaleLowerCase("pt-BR");
+ const list=data.clients.filter(c=>c.name.toLocaleLowerCase("pt-BR").includes(query));
+ $("clientList").innerHTML=list.length?list.map(c=>{
+ const count=data.clothes.filter(g=>g.owner===c.id).length;
+ return `<div class="item"><strong>${safe(c.name)}</strong><span class="muted">${c.height?`Altura: ${safe(c.height)} cm · `:""}${count} peça(s)</span>
+ <p class="muted">${safe(c.observations||"Sem observações")}</p>
+ <div class="actions"><button class="secondary" data-edit-client="${c.id}">Editar medidas</button><button class="secondary" data-view-client="${c.id}">Ver ficha</button><button class="danger" data-delete-client="${c.id}">Excluir</button></div>
+ <div id="view_${c.id}" class="hidden muted"></div></div>`;
+ }).join(""):'<div class="empty">Nenhum cliente cadastrado ainda.</div>';
+ updateOwnerOptions();
+}
+function updateOwnerOptions(){
+ const previous=$("owner").value;
+ $("owner").innerHTML='<option value="">Selecione um cliente</option>'+data.clients.map(c=>`<option value="${c.id}">${safe(c.name)}</option>`).join("");
+ if(data.clients.some(c=>c.id===previous))$("owner").value=previous;
+}
+function renderClothes(){
+ $("clothesList").innerHTML=data.clothes.length?data.clothes.slice().reverse().map(g=>{
+ const c=data.clients.find(x=>x.id===g.owner);
+ return `<div class="item"><strong>${safe(g.garmentName)}</strong><span class="tag">${safe(g.stage)}</span>
+ <p class="muted">Cliente: ${safe(c?c.name:"Cadastro não encontrado")} · Tecido: ${safe(g.fabric||"Não informado")}</p>
+ <p class="muted">Cintura: ${safe(g.waist||"Natural")} · Fechamento: ${safe(g.closure||"Não informado")}</p>
+ <p>${safe(g.details||"Sem detalhes.")}</p>
+ ${g.image?`<img class="reference" src="${g.image}" alt="Imagem de referência">`:""}
+ <div class="actions"><button class="secondary" data-edit-clothes="${g.id}">Editar peça</button><button class="danger" data-delete-clothes="${g.id}">Excluir</button></div></div>`;
+ }).join(""):'<div class="empty">Nenhuma peça registrada ainda.</div>';
+}
+function renderAll(){renderClients();renderClothes();$("storageStatus").textContent=`${data.clients.length} cliente(s) e ${data.clothes.length} peça(s) cadastrados neste navegador.`;}
+function id(){return Date.now().toString(36)+Math.random().toString(36).slice(2,8);}
+function switchTab(tab){
+ document.querySelectorAll("main section").forEach(s=>s.classList.add("hidden"));
+ $(tab).classList.remove("hidden");
+ document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("secondary",b.dataset.tab!==tab));
+ if(tab==="backup")$("storageStatus").textContent=`${data.clients.length} cliente(s) e ${data.clothes.length} peça(s) cadastrados neste navegador.`;
+}
+document.querySelectorAll("nav button").forEach(b=>b.addEventListener("click",()=>switchTab(b.dataset.tab)));
+makeMeasurementFields();
+$("clientForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ const clientId=$("clientId").value||id();
+ const measurementsData={};
+ measurements.forEach(([,key])=>{const v=$("m_"+key).value;measurementsData[key]=v===""?"":Number(v);});
+ const client={id:clientId,name:$("name").value.trim(),height:$("height").value?Number($("height").value):"",observations:$("observations").value.trim(),measurements:measurementsData};
+ const index=data.clients.findIndex(c=>c.id===clientId);
+ if(index>=0)data.clients[index]=client;else data.clients.push(client);
+ if(persist()){resetClient();renderAll();alert("Cliente salvo.");}
+});
+$("cancelClient").addEventListener("click",resetClient);
+$("searchClients").addEventListener("input",renderClients);
+$("clientList").addEventListener("click",e=>{
+ const b=e.target.closest("button");if(!b)return;
+ const c=data.clients.find(x=>x.id===b.dataset.editClient||x.id===b.dataset.viewClient||x.id===b.dataset.deleteClient);
+ if(!c)return;
+ if(b.dataset.editClient){
+  $("clientId").value=c.id;$("name").value=c.name;$("height").value=c.height;$("observations").value=c.observations;
+  measurements.forEach(([,key])=>$("m_"+key).value=c.measurements?.[key]??"");
+  $("clientTitle").textContent="Editar cliente";window.scrollTo({top:0,behavior:"smooth"});
+ }else if(b.dataset.viewClient){
+  const el=$("view_"+c.id);el.classList.toggle("hidden");
+  el.innerHTML=`<h3>Ficha de ${safe(c.name)}</h3>`+measurements.map(([label,key])=>`<div>${safe(label)}: ${c.measurements?.[key]!==""&&c.measurements?.[key]!=null?safe(c.measurements[key])+" cm":"Não informado"}</div>`).join("");
+ }else if(b.dataset.deleteClient){
+  if(!confirm(`Excluir ${c.name} e as peças associadas? Essa ação não pode ser desfeita sem backup.`))return;
+  data.clients=data.clients.filter(x=>x.id!==c.id);data.clothes=data.clothes.filter(g=>g.owner!==c.id);
+  if(persist())renderAll();
+ }
+});
+$("reference").addEventListener("change",()=>{
+ const file=$("reference").files[0];if(!file){currentImage="";$("imagePreview").innerHTML="";return;}
+ if(!file.type.startsWith("image/")){alert("Selecione um arquivo de imagem.");return;}
+ const reader=new FileReader();
+ reader.onload=()=>{
+  const img=new Image();
+  img.onload=()=>{
+   const max=1000,scale=Math.min(1,max/Math.max(img.width,img.height));
+   const canvas=document.createElement("canvas");canvas.width=Math.round(img.width*scale);canvas.height=Math.round(img.height*scale);
+   canvas.getContext("2d").drawImage(img,0,0,canvas.width,canvas.height);
+   currentImage=canvas.toDataURL("image/jpeg",.72);
+   $("imagePreview").innerHTML=`<img class="reference" src="${currentImage}" alt="Prévia da referência">`;
+  };
+  img.onerror=()=>alert("Não foi possível abrir essa imagem.");
+  img.src=reader.result;
+ };
+ reader.readAsDataURL(file);
+});
+function resetClothes(){
+ $("clothesForm").reset();$("clothesId").value="";currentImage="";$("imagePreview").innerHTML="";$("clothesTitle").textContent="Registrar peça de roupa";
+}
+$("cancelClothes").addEventListener("click",resetClothes);
+$("clothesForm").addEventListener("submit",e=>{
+ e.preventDefault();
+ const garmentId=$("clothesId").value||id();
+ const old=data.clothes.find(g=>g.id===garmentId);
+ const garment={id:garmentId,owner:$("owner").value,garmentName:$("garmentName").value.trim(),fabric:$("fabric").value.trim(),stage:$("stage").value,waist:$("waist").value,closure:$("closure").value,details:$("details").value.trim(),image:currentImage||old?.image||""};
+ const index=data.clothes.findIndex(g=>g.id===garmentId);
+ if(index>=0)data.clothes[index]=garment;else data.clothes.push(garment);
+ if(persist()){resetClothes();renderAll();alert("Peça salva.");}
+});
+$("clothesList").addEventListener("click",e=>{
+ const b=e.target.closest("button");if(!b)return;
+ if(b.dataset.deleteClothes){
+  if(!confirm("Excluir esta peça?"))return;
+  data.clothes=data.clothes.filter(g=>g.id!==b.dataset.deleteClothes);if(persist())renderAll();
+ }
+ if(b.dataset.editClothes){
+  const g=data.clothes.find(x=>x.id===b.dataset.editClothes);if(!g)return;
+  $("clothesId").value=g.id;$("owner").value=g.owner;$("garmentName").value=g.garmentName;$("fabric").value=g.fabric;
+  $("stage").value=g.stage;$("waist").value=g.waist||"Natural";$("closure").value=g.closure||"Zíper";$("details").value=g.details;
+  currentImage=g.image||"";$("imagePreview").innerHTML=currentImage?`<img class="reference" src="${currentImage}" alt="Imagem de referência">`:"";
+  $("clothesTitle").textContent="Editar peça";switchTab("clothes");window.scrollTo({top:0,behavior:"smooth"});
+ }
+});
+$("exportData").addEventListener("click",()=>{
+ const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+ const url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download="meu-atelie-backup.json";a.click();URL.revokeObjectURL(url);
+});
+$("importButton").addEventListener("click",()=>$("importFile").click());
+$("importFile").addEventListener("change",async()=>{
+ const file=$("importFile").files[0];if(!file)return;
+ try{
+  const parsed=JSON.parse(await file.text());
+  if(!Array.isArray(parsed.clients)||!Array.isArray(parsed.clothes))throw Error("Formato inválido");
+  if(!confirm("Importar este backup substituirá os cadastros atuais. Deseja continuar?"))return;
+  const previous=data;data=parsed;
+  if(persist()){renderAll();alert("Backup importado.");}else data=previous;
+ }catch(e){alert("Arquivo inválido ou incompatível. Nenhum backup foi importado.");}
+ $("importFile").value="";
+});
+renderAll();switchTab("clients");
+})();
+</script>
+</body>
+</html>
