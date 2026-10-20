@@ -1,115 +1,498 @@
-
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Meu Ateliê — Calça</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Meu Ateliê — Molde de Calça</title>
 <style>
-*{box-sizing:border-box}body{margin:0;background:#f7f3ef;color:#342b2b;font:16px Arial}header{padding:18px;background:white;border-bottom:1px solid #e6dcd8}h1{margin:0;color:#8a5966}main{max-width:1050px;margin:auto;padding:16px}.card{background:white;padding:18px;border:1px solid #e6dcd8;border-radius:12px;margin-bottom:16px}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));gap:12px}label{display:block;font-size:13px;margin-bottom:5px;color:#766a6a}input,select{width:100%;padding:10px;border:1px solid #d8ceca;border-radius:7px;font-size:16px}button,.btn{display:inline-block;padding:11px 14px;background:#8a5966;color:white;border:0;border-radius:8px;margin:8px 5px 0 0;cursor:pointer;text-decoration:none}.small{font-size:13px;line-height:1.5;color:#766a6a}.note{padding:12px;background:#f8f0e6;border-radius:8px;font-size:13px;line-height:1.5}#error{color:#a12e2e}#result{display:none}#preview{overflow:auto}#preview svg{max-width:100%;height:auto}#printArea{display:none}@media print{@page{size:A4 portrait;margin:0}header,main{display:none!important}#printArea{display:block!important}.tile{width:190mm;height:277mm;overflow:hidden;break-after:page}.tile:last-child{break-after:auto}.tile svg{width:190mm;height:277mm;display:block}}
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f5f2ed;
+    color: #292622;
+  }
+  header {
+    background: #44372f;
+    color: white;
+    padding: 18px;
+  }
+  header h1 { margin: 0 0 6px; font-size: 1.4rem; }
+  header p { margin: 0; font-size: .9rem; }
+  main { max-width: 1100px; margin: auto; padding: 16px; }
+  .panel {
+    background: white;
+    padding: 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    box-shadow: 0 2px 8px #0000000d;
+  }
+  h2 { font-size: 1.1rem; margin-top: 0; }
+  .fields {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+    gap: 12px;
+  }
+  label { display: block; font-size: .88rem; font-weight: bold; }
+  input, select {
+    width: 100%;
+    padding: 10px;
+    margin-top: 5px;
+    border: 1px solid #c9c1b9;
+    border-radius: 7px;
+    font-size: 1rem;
+    background: white;
+  }
+  button {
+    padding: 11px 15px;
+    margin: 8px 6px 0 0;
+    border: 0;
+    border-radius: 7px;
+    cursor: pointer;
+    font-size: .95rem;
+    background: #725442;
+    color: white;
+  }
+  button.secondary { background: #e9e2db; color: #292622; }
+  .note { font-size: .9rem; line-height: 1.5; color: #625950; }
+  #status { margin-top: 10px; font-size: .9rem; }
+  #preview {
+    overflow: auto;
+    background: #e9e5df;
+    padding: 12px;
+    border-radius: 8px;
+  }
+  #pattern {
+    display: block;
+    background: white;
+    width: 100%;
+    min-width: 500px;
+    height: auto;
+  }
+  .warning {
+    border-left: 4px solid #b77a32;
+    padding: 10px 12px;
+    background: #fff5e7;
+    font-size: .9rem;
+    line-height: 1.5;
+  }
+  @media print {
+    body { background: white; }
+    header, .controls, .panel.inputs-panel, .warning { display: none !important; }
+    main { padding: 0; max-width: none; }
+    .panel { box-shadow: none; padding: 0; margin: 0; }
+    #preview { padding: 0; overflow: visible; background: white; }
+    #pattern { width: 100%; min-width: 0; }
+    @page { size: A4 landscape; margin: 10mm; }
+  }
 </style>
 </head>
 <body>
-<header><h1>Meu Ateliê</h1><p>Gerador de calças</p></header>
+<header>
+  <h1>Meu Ateliê — Molde de Calça</h1>
+  <p>Gerador experimental de molde com medidas personalizáveis</p>
+</header>
+
 <main>
-<section class="card">
-<h2>1. Cliente e modelo</h2>
-<div class="grid">
-<div><label for="client">Cliente</label><select id="client"><option value="">Medidas manuais</option></select></div>
-<div><label for="model">Modelo</label><select id="model"><option value="Calça reta">Calça reta</option><option value="Calça social com pregas">Calça social com pregas</option></select></div>
-<div><label for="pocket">Bolsos frontais</label><select id="pocket"><option value="yes">Incluir</option><option value="no">Não incluir</option></select></div>
-</div>
-</section>
-<section class="card">
-<h2>2. Medidas corporais (cm)</h2>
-<p class="small">Selecione o cliente para carregar as medidas já cadastradas. Preencha apenas os campos que estiverem vazios. Confira o comprimento lateral e a entreperna antes de gerar.</p>
-<div class="grid">
-<div><label for="waist">Cintura</label><input id="waist" type="number" min="55" max="180" step=".1"></div>
-<div><label for="hip">Quadril/assento</label><input id="hip" type="number" min="65" max="200" step=".1"></div>
-<div><label for="rise">Altura do gancho</label><input id="rise" type="number" min="18" max="45" step=".1"></div>
-<div><label for="outseam">Comprimento lateral da calça</label><input id="outseam" type="number" min="65" max="140" step=".1"></div>
-<div><label for="inseam">Entreperna</label><input id="inseam" type="number" min="45" max="110" step=".1"></div>
-<div><label for="thigh">Contorno da coxa</label><input id="thigh" type="number" min="35" max="100" step=".1"></div>
-<div><label for="knee">Contorno do joelho</label><input id="knee" type="number" min="25" max="80" step=".1"></div>
-<div><label for="hemWidth">Contorno desejado da barra</label><input id="hemWidth" type="number" min="30" max="90" step=".1"></div>
-</div>
-<h3>Folgas e acabamentos</h3>
-<div class="grid">
-<div><label for="waistHeight">Altura do cós pronto</label><input id="waistHeight" type="number" value="4" min="2" max="8" step=".5"></div>
-<div><label for="waistEase">Folga da cintura</label><input id="waistEase" type="number" value="2" min="0" max="8" step=".5"></div>
-<div><label for="hipEase">Folga do quadril</label><input id="hipEase" type="number" value="8" min="3" max="16" step=".5"></div>
-<div><label for="thighEase">Folga da coxa</label><input id="thighEase" type="number" value="8" min="3" max="18" step=".5"></div>
-<div><label for="pleat">Profundidade da prega</label><input id="pleat" type="number" value="2" min="1" max="4" step=".5"></div>
-<div><label for="seam">Margem de costura</label><input id="seam" type="number" value="1.5" min=".7" max="2.5" step=".1"></div>
-<div><label for="hem">Margem da barra</label><input id="hem" type="number" value="4" min="2" max="8" step=".5"></div>
-<div><label for="fly">Extensão da braguilha</label><input id="fly" type="number" value="3" min="2" max="5" step=".5"></div>
-</div>
-<button id="generate">Gerar molde</button><button id="print" disabled>Imprimir / salvar PDF A4</button><a class="btn" href="index.html">Voltar ao Meu Ateliê</a>
-<p id="error"></p><p id="status" class="small"></p>
-</section>
-<section class="card" id="result"><h2>3. Prévia do molde</h2><p id="summary" class="note"></p><div id="preview"></div></section>
-<section class="card"><h2>Impressão</h2><p class="small">Imprima em escala 100%, sem “ajustar à página”. Confira o quadrado de 5 × 5 cm com uma régua.</p><p class="note">O molde é experimental e precisa de uma peça-piloto. Confira o gancho, o equilíbrio das pernas, as pregas, o cós, a braguilha e o encaixe das costuras antes do corte definitivo.</p></section>
+  <section class="panel inputs-panel">
+    <h2>1. Cliente e medidas</h2>
+    <p class="note">
+      As medidas devem ser informadas em centímetros. Confira cada medida
+      antes de gerar o desenho.
+    </p>
+
+    <label for="clientSelect">Selecionar cliente cadastrado</label>
+    <select id="clientSelect">
+      <option value="">Selecione um cliente</option>
+    </select>
+    <button type="button" class="secondary" id="loadClient">
+      Carregar medidas do cliente
+    </button>
+
+    <div class="fields" style="margin-top:16px">
+      <label>Cintura (cm)
+        <input id="waist" type="number" min="30" max="200" value="80">
+      </label>
+      <label>Quadril (cm)
+        <input id="hip" type="number" min="50" max="250" value="100">
+      </label>
+      <label>Profundidade do quadril (cm)
+        <input id="hipDepth" type="number" min="10" max="60" value="20">
+      </label>
+      <label>Gancho total (cm)
+        <input id="rise" type="number" min="10" max="60" value="27">
+      </label>
+      <label>Comprimento lateral (cm)
+        <input id="outseam" type="number" min="40" max="150" value="100">
+      </label>
+      <label>Entreperna (cm)
+        <input id="inseam" type="number" min="30" max="120" value="75">
+      </label>
+      <label>Coxa (circunferência, cm)
+        <input id="thigh" type="number" min="25" max="120" value="58">
+      </label>
+      <label>Joelho (circunferência, cm)
+        <input id="knee" type="number" min="20" max="100" value="40">
+      </label>
+      <label>Boca da calça (circunferência, cm)
+        <input id="hem" type="number" min="20" max="100" value="42">
+      </label>
+      <label>Folga no quadril (cm)
+        <input id="hipEase" type="number" min="0" max="20" value="4">
+      </label>
+      <label>Folga na cintura (cm)
+        <input id="waistEase" type="number" min="0" max="15" value="2">
+      </label>
+      <label>Largura do cós (cm)
+        <input id="band" type="number" min="2" max="12" value="4">
+      </label>
+      <label>Margem de costura (cm)
+        <input id="seam" type="number" min="0" max="3" step="0.5" value="1.5">
+      </label>
+      <label>Barra para acabamento (cm)
+        <input id="hemAllowance" type="number" min="1" max="10" value="4">
+      </label>
+    </div>
+
+    <div class="controls">
+      <button type="button" id="generate">Gerar prévia</button>
+      <button type="button" class="secondary" id="print">Imprimir</button>
+      <button type="button" class="secondary" id="reset">Restaurar exemplo</button>
+    </div>
+    <div id="status" role="status"></div>
+  </section>
+
+  <section class="panel">
+    <h2>2. Prévia do molde</h2>
+    <div class="warning">
+      Protótipo experimental: o desenho é uma aproximação geométrica, não
+      uma modelagem industrial validada. A escala impressa e o encaixe das
+      costuras precisam ser conferidos antes de cortar o tecido definitivo.
+    </div>
+    <p class="note">
+      O quadrado de referência deve medir exatamente 5 × 5 cm após a
+      impressão em escala real. Se não medir, não use o molde.
+    </p>
+    <div id="preview">
+      <svg id="pattern" xmlns="http://www.w3.org/2000/svg"
+           viewBox="0 0 1000 750" role="img"
+           aria-label="Prévia experimental do molde de calça">
+        <text x="30" y="40">Preencha as medidas e clique em Gerar prévia.</text>
+      </svg>
+    </div>
+  </section>
 </main>
-<div id="printArea"></div>
+
 <script>
-(()=>{
-"use strict";
-const $=id=>document.getElementById(id),KEY="meuAtelie_v1",NS="http://www.w3.org/2000/svg";
-let ready=false;
-const fields=["waist","hip","rise","outseam","inseam","thigh","knee","hemWidth","waistHeight","waistEase","hipEase","thighEase","pleat","seam","hem","fly"];
-function esc(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
-function invalidate(){ready=false;$("print").disabled=true;$("result").style.display="none";$("preview").innerHTML="";$("printArea").innerHTML="";}
-function loadClients(){
- const old=$("client").value;let data={};try{data=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(_){}
- const cs=Array.isArray(data.clients)?data.clients:[];
- $("client").innerHTML='<option value="">Medidas manuais</option>'+cs.filter(c=>c&&c.id!=null).map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name||"Cliente sem nome")+'</option>').join("");
- if(cs.some(c=>String(c.id)===old))$("client").value=old;
-}
-function loadClient(){
- invalidate();let data={};try{data=JSON.parse(localStorage.getItem(KEY)||"{}")}catch(_){}
- const c=(data.clients||[]).find(x=>x&&String(x.id)===$("client").value);
- if(!c){$("status").textContent="Preencha as medidas manualmente ou selecione um cliente.";return;}
- const m=c.measurements||{};
- const map={waist:["cintura"],hip:["quadril"],rise:["gancho"],outseam:["calca","comprimentoCalca"],inseam:["entreperna"],thigh:["coxa"],knee:["joelho"]};
- for(const [id,keys] of Object.entries(map)){for(const key of keys){const n=Number(m[key]);if(m[key]!=null&&m[key]!==""&&Number.isFinite(n)&&n>0){$(id).value=n;break;}}}
- $("status").textContent="Medidas do cadastro carregadas. Confira e complete os campos restantes.";
-}
-loadClients();$("client").addEventListener("change",loadClient);window.addEventListener("storage",e=>{if(e.key===KEY||e.key===null)loadClients()});fields.forEach(id=>$(id).addEventListener("input",invalidate));
-function generate(){
- invalidate();$("error").textContent="";$("status").textContent="";
- const ranges={waist:[55,180],hip:[65,200],rise:[18,45],outseam:[65,140],inseam:[45,110],thigh:[35,100],knee:[25,80],hemWidth:[30,90],waistHeight:[2,8],waistEase:[0,8],hipEase:[3,16],thighEase:[3,18],pleat:[1,4],seam:[.7,2.5],hem:[2,8],fly:[2,5]},v={};
- for(const [id,[min,max]] of Object.entries(ranges)){const raw=$(id).value.trim(),n=Number(raw);if(!raw||!Number.isFinite(n)||n<min||n>max){$("error").textContent="Preencha todos os campos numéricos dentro dos limites indicados.";$(id).focus();return;}v[id]=n;}
- if(v.inseam>=v.outseam||v.rise>=v.outseam||v.hip<=v.waist*.75||v.inseam+v.rise>v.outseam+12){$("error").textContent="Confira cintura, quadril, gancho e comprimentos. A entreperna e o gancho precisam ser compatíveis com o comprimento lateral.";return;}
- const mm=n=>n*10,top=100,outer=mm(v.outseam),rise=mm(v.rise),inseam=mm(v.inseam),hemY=top+outer,crotchY=top+rise,kneeY=top+Math.min(outer-mm(15),Math.max(rise+mm(12),outer-inseam*.48)),hipW=mm(v.hip+v.hipEase)/4,waistW=mm(v.waist+v.waistEase)/4,thighW=mm(v.thigh+v.thighEase)/2,kneeW=mm(v.knee+v.thighEase*.25)/2,hemW=mm(v.hemWidth)/2,pleat=mm(v.pleat),frontX=55,backX=frontX+hipW+100,bandY=hemY+mm(v.hem)+mm(20),bandH=mm(v.waistHeight)+mm(v.seam)*2;
- const t=(x,y,s,size=5)=>`<text x="${x}" y="${y}" font-size="${size}" font-family="Arial" fill="#222" text-anchor="middle">${esc(s)}</text>`;
- const line=(x1,y1,x2,y2,col="#387a65",dash="4 3")=>`<line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width=".8" stroke-dasharray="${dash}"/>`;
- function piece(x,back){
-  const waist=waistW+(back?mm(2):pleat*2),crotch=hipW*(back?.40:.28),outerX=x+hipW,innerTop=x+waist,innerCrotch=x+crotch,innerKnee=x+hipW-kneeW*.48,innerHem=x+hipW-hemW;
-  const d=`M ${x} ${top} L ${innerTop} ${top} C ${innerTop+mm(2)} ${top+rise*.12} ${outerX-mm(3)} ${top+rise*.2} ${outerX-mm(5)} ${crotchY} C ${outerX-mm(5)} ${crotchY+mm(back?7:2)} ${x+hipW*.86} ${crotchY+mm(10)} ${innerCrotch} ${crotchY+mm(back?4:0)} C ${innerCrotch-mm(4)} ${crotchY+mm(18)} ${innerKnee} ${kneeY-mm(18)} ${innerKnee} ${kneeY} L ${innerHem} ${hemY} L ${outerX} ${hemY} L ${outerX} ${kneeY} L ${outerX} ${crotchY} Q ${outerX} ${top+rise*.3} ${x} ${top} Z`;
-  let out=`<path d="${d}" fill="none" stroke="#222" stroke-width="1.2"/>`;
-  out+=line(x+hipW*.53,top+rise*.45,x+hipW*.53,hemY-mm(8));
-  out+=line(x,crotchY,outerX,crotchY,"#b36a22","3 3");
-  out+=t(x+hipW/2,top-8,back?"COSTAS — CORTAR 2":"FRENTE — CORTAR 2",5);
-  out+=t(x+hipW*.53,top+outer*.68,"VINCO CENTRAL",3.5);
-  out+=t(x+hipW/2,hemY+mm(v.hem)+4,"BAINHA",3.5);
-  if(back){for(let k of [.32,.68]){const px=x+hipW*k;out+=`<path d="M ${px-mm(1)} ${top} L ${px} ${top+mm(12)} L ${px+mm(1)} ${top}" fill="none" stroke="#8a5966"/>`;}}
-  else{for(let k of [.3,.58]){const px=x+hipW*k;out+=line(px,top+mm(2),px,top+mm(12),"#8a5966","3 2")+line(px+pleat,top+mm(2),px+pleat,top+mm(12),"#8a5966","3 2");}}
-  if(!back&&$("pocket").value==="yes"){const px=x+hipW*.1;out+=`<path d="M ${px} ${top+mm(5)} Q ${px+mm(8)} ${top+mm(25)} ${px+mm(20)} ${top+mm(28)}" fill="none" stroke="#547f70"/>`+t(px+mm(10),top+mm(32),"BOLSO",3.5);}
-  return out;
- }
- const bandW=mm(v.waist+v.waistEase+v.fly+2*v.seam),flyY=bandY+bandH+mm(10),flyW=mm(v.fly*2+v.seam*2),flyH=mm(v.rise*.55),pocketX=backX+hipW+25,pocketY=top;
- const width=pocketX+mm(30),height=flyY+flyH+mm(45);
- const drawing=`<rect width="${width}" height="${height}" fill="white"/>${t(30,22,"MEU ATELIÊ — "+$("model").value,7)}${t(30,34,"Medidas em mm | conferir a peça-piloto",4,"start")}${piece(frontX,false)}${piece(backX,true)}<rect x="55" y="${bandY}" width="${bandW}" height="${bandH}" fill="none" stroke="#222"/>${t(55+bandW/2,bandY-5,"CÓS — conferir comprimento",4)}<rect x="55" y="${flyY}" width="${flyW}" height="${flyH}" fill="none" stroke="#222"/>${t(55+flyW/2,flyY-5,"BRAGUILHA",4)}<rect x="${width-65}" y="${height-65}" width="50" height="50" fill="none" stroke="#222"/>${t(width-40,height-38,"5 × 5 cm",4)}`;
- const svg=`<svg xmlns="${NS}" width="${width}mm" height="${height}mm" viewBox="0 0 ${width} ${height}">${drawing}</svg>`;
- $("preview").innerHTML=svg;$("summary").textContent=`Cintura ${v.waist} cm; quadril ${v.hip} cm; coxa ${v.thigh} cm; joelho ${v.knee} cm; barra desejada ${v.hemWidth} cm. Folgas e medidas devem ser conferidas na peça de prova.`;
- makeTiles(svg,width,height);$("result").style.display="block";$("print").disabled=false;ready=true;$("status").textContent="Prévia criada. Confira a escala antes de imprimir.";
-}
-function makeTiles(svg,w,h){
- const tw=190,th=277,over=10,sx=tw-over,sy=th-over,nx=Math.max(1,Math.ceil((w-over)/sx)),ny=Math.max(1,Math.ceil((h-over)/sy)),doc=new DOMParser().parseFromString(svg,"image/svg+xml"),root=doc.documentElement;let html="";
- for(let r=0;r<ny;r++)for(let c=0;c<nx;c++){const x=c*sx,y=r*sy,clone=root.cloneNode(true);clone.setAttribute("width","190mm");clone.setAttribute("height","277mm");clone.setAttribute("viewBox",`${x} ${y} ${tw} ${th}`);clone.setAttribute("preserveAspectRatio","none");const label=doc.createElementNS(NS,"text");label.setAttribute("x",x+5);label.setAttribute("y",y+8);label.setAttribute("font-size","3");label.textContent=`Folha ${r+1}-${c+1} — sobreposição 10 mm`;clone.appendChild(label);html+=`<div class="tile">${new XMLSerializer().serializeToString(clone)}</div>`;}
- $("printArea").innerHTML=html;
-}
-$("generate").addEventListener("click",generate);$("print").addEventListener("click",()=>{if(ready)window.print()});
+(() => {
+  "use strict";
+
+  const $ = id => document.getElementById(id);
+
+  const fieldIds = [
+    "waist", "hip", "hipDepth", "rise", "outseam", "inseam",
+    "thigh", "knee", "hem", "hipEase", "waistEase",
+    "band", "seam", "hemAllowance"
+  ];
+
+  const storageKey = "meuAtelie_v1";
+
+  function getDatabase() {
+    try {
+      const raw = localStorage.getItem(storageKey);
+      if (!raw) return { clients: [], clothes: [] };
+      const parsed = JSON.parse(raw);
+      return {
+        clients: Array.isArray(parsed.clients) ? parsed.clients : [],
+        clothes: Array.isArray(parsed.clothes) ? parsed.clothes : []
+      };
+    } catch (error) {
+      console.error("Erro ao ler cadastro local:", error);
+      return { clients: [], clothes: [] };
+    }
+  }
+
+  function populateClients() {
+    const select = $("clientSelect");
+    select.innerHTML = '<option value="">Selecione um cliente</option>';
+
+    getDatabase().clients.forEach(client => {
+      const option = document.createElement("option");
+      option.value = String(client.id);
+      option.textContent = client.name || "Cliente sem nome";
+      select.appendChild(option);
+    });
+  }
+
+  const mapping = {
+    waist: ["cintura"],
+    hip: ["quadril"],
+    hipDepth: ["cinturaQuadril", "alturaQuadril"],
+    rise: ["gancho"],
+    outseam: ["calca", "comprimentoCalca"],
+    inseam: ["entreperna"],
+    thigh: ["coxa"],
+    knee: ["joelho"]
+  };
+
+  function loadClient() {
+    const selectedId = $("clientSelect").value;
+    if (!selectedId) {
+      $("status").textContent = "Selecione primeiro um cliente.";
+      return;
+    }
+
+    const client = getDatabase().clients.find(
+      item => String(item.id) === selectedId
+    );
+
+    if (!client) {
+      $("status").textContent = "Cliente não encontrado no cadastro local.";
+      return;
+    }
+
+    const measurements = client.measurements || {};
+    let loaded = 0;
+
+    for (const [field, keys] of Object.entries(mapping)) {
+      const foundKey = keys.find(key => {
+        const value = Number(measurements[key]);
+        return measurements[key] !== undefined &&
+          measurements[key] !== "" &&
+          Number.isFinite(value) &&
+          value > 0;
+      });
+
+      if (foundKey) {
+        $(field).value = Number(measurements[foundKey]);
+        loaded++;
+      }
+    }
+
+    $("status").textContent =
+      loaded + " campos carregados. Confira as medidas restantes.";
+    generatePattern();
+  }
+
+  function readValues() {
+    const values = {};
+
+    for (const id of fieldIds) {
+      const value = Number($(id).value);
+      if (!Number.isFinite(value) || value <= 0) {
+        throw new Error("Confira o campo: " + id);
+      }
+      values[id] = value;
+    }
+
+    if (values.hip <= values.waist) {
+      throw new Error("O quadril deve ser maior que a cintura.");
+    }
+
+    if (values.inseam >= values.outseam) {
+      throw new Error("A entreperna deve ser menor que o comprimento lateral.");
+    }
+
+    if (values.hipDepth >= values.outseam) {
+      throw new Error("A profundidade do quadril parece muito grande.");
+    }
+
+    return values;
+  }
+
+  function svgElement(tag, attrs = {}, parent = $("pattern")) {
+    const node = document.createElementNS(
+      "http://www.w3.org/2000/svg", tag
+    );
+
+    for (const [key, value] of Object.entries(attrs)) {
+      node.setAttribute(key, String(value));
+    }
+
+    parent.appendChild(node);
+    return node;
+  }
+
+  function addText(x, y, text, size = 14, parent = $("pattern")) {
+    const node = svgElement("text", {
+      x, y, "font-size": size, fill: "#292622"
+    }, parent);
+    node.textContent = text;
+    return node;
+  }
+
+  function generatePattern() {
+    try {
+      const v = readValues();
+      const svg = $("pattern");
+      svg.replaceChildren();
+
+      /*
+       * A escala de prévia é esquemática. Os cálculos abaixo distribuem
+       * larguras derivadas das circunferências por quarto do corpo e
+       * posicionam pontos de referência. Eles NÃO garantem, por si sós,
+       * que as linhas de costura tenham os comprimentos necessários.
+       */
+      const scale = 3.2; // unidades SVG por centímetro
+      const cm = n => n * scale;
+
+      const hipQuarter = (v.hip + v.hipEase) / 4;
+      const waistQuarter = (v.waist + v.waistEase) / 4;
+      const thighQuarter = v.thigh / 2;
+      const kneeQuarter = v.knee / 2;
+      const hemQuarter = v.hem / 2;
+
+      const topY = 95;
+      const hipY = topY + cm(v.hipDepth);
+      const crotchY = topY + cm(v.rise);
+      const kneeY = topY + cm(v.inseam) * 0.58;
+      const hemY = topY + cm(v.outseam);
+      const halfHip = cm(hipQuarter);
+      const halfWaist = cm(waistQuarter);
+
+      const frontX = 90;
+      const backX = 480;
+
+      // Título e quadrado de teste.
+      addText(25, 28, "MEU ATELIÊ — CALÇA (PRÉVIA EXPERIMENTAL)", 18);
+      addText(25, 52, "Confirme escala e costuras antes de cortar tecido.", 12);
+
+      svgElement("rect", {
+        x: 25, y: 70, width: cm(5), height: cm(5),
+        fill: "none", stroke: "#c0392b", "stroke-width": 1.5
+      });
+      addText(25, 70 + cm(5) + 16, "Quadrado de 5 × 5 cm", 11);
+
+      function drawPiece(originX, isBack) {
+        const waistW = halfWaist;
+        const hipW = halfHip;
+        const thighW = cm(thighQuarter);
+        const kneeW = cm(kneeQuarter);
+        const hemW = cm(hemQuarter);
+
+        const sideX = originX + hipW;
+        const waistX = originX + waistW;
+        const centerTopX = originX;
+        const crotchExtension = cm(isBack ? 10 : 5);
+        const inseamX = originX + crotchExtension;
+
+        const points = [
+          [centerTopX, topY],
+          [waistX, topY],
+          [sideX, hipY],
+          [sideX, hemY],
+          [originX + hemW, hemY],
+          [originX + kneeW, kneeY],
+          [inseamX, crotchY],
+          [centerTopX - crotchExtension, crotchY],
+          [centerTopX, hipY]
+        ];
+
+        const path = points.map((p, i) =>
+          (i === 0 ? "M" : "L") + p[0] + " " + p[1]
+        ).join(" ") + " Z";
+
+        svgElement("path", {
+          d: path,
+          fill: isBack ? "#e9dfd4" : "#f1e7dd",
+          stroke: "#45362c",
+          "stroke-width": 2,
+          "stroke-linejoin": "round"
+        });
+
+        // Linhas de referência para quadril, joelho e gancho.
+        svgElement("line", {
+          x1: originX - 10, y1: hipY,
+          x2: sideX + 10, y2: hipY,
+          stroke: "#9c806a", "stroke-dasharray": "5 4"
+        });
+
+        svgElement("line", {
+          x1: originX - 10, y1: kneeY,
+          x2: sideX + 10, y2: kneeY,
+          stroke: "#9c806a", "stroke-dasharray": "5 4"
+        });
+
+        addText(originX, topY - 12, isBack ? "COSTAS — ESQUEMA" : "FRENTE — ESQUEMA", 14);
+        addText(originX, hemY + 24, "Barra: " + v.hem + " cm de circunferência", 11);
+        addText(originX, hemY + 40, "Comprimento lateral: " + v.outseam + " cm", 11);
+
+        // Cós esquemático separado.
+        const bandY = topY - cm(v.band) - 8;
+        svgElement("rect", {
+          x: originX,
+          y: bandY,
+          width: Math.max(waistW, cm(2)),
+          height: cm(v.band),
+          fill: "#d8c7b8",
+          stroke: "#45362c",
+          "stroke-width": 1.5
+        });
+        addText(originX, bandY - 5, "CÓS (esquema)", 10);
+
+        // Marcação visual da margem; ainda não é um offset geométrico real.
+        if (v.seam > 0) {
+          addText(originX, hemY + 56,
+            "Margem solicitada: " + v.seam + " cm (não validada)", 10);
+        }
+
+        if (v.hemAllowance > 0) {
+          addText(originX, hemY + 72,
+            "Barra adicional: " + v.hemAllowance + " cm", 10);
+        }
+      }
+
+      drawPiece(frontX, false);
+      drawPiece(backX, true);
+
+      const viewHeight = Math.max(
+        750,
+        hemY + 110
+      );
+
+      svg.setAttribute("viewBox", "0 0 1000 " + viewHeight);
+      svg.setAttribute("height", String(viewHeight));
+
+      $("status").textContent =
+        "Prévia gerada. É um esquema inicial: a geometria ainda precisa ser validada.";
+    } catch (error) {
+      $("status").textContent = error.message;
+    }
+  }
+
+  function resetValues() {
+    const defaults = {
+      waist: 80,
+      hip: 100,
+      hipDepth: 20,
+      rise: 27,
+      outseam: 100,
+      inseam: 75,
+      thigh: 58,
+      knee: 40,
+      hem: 42,
+      hipEase: 4,
+      waistEase: 2,
+      band: 4,
+      seam: 1.5,
+      hemAllowance: 4
+    };
+
+    for (const [id, value] of Object.entries(defaults)) {
+      $(id).value = value;
+    }
+
+    $("clientSelect").value = "";
+    generatePattern();
+  }
+
+  $("loadClient").addEventListener("click", loadClient);
+  $("generate").addEventListener("click", generatePattern);
+  $("print").addEventListener("click", () => window.print());
+  $("reset").addEventListener("click", resetValues);
+
+  populateClients();
+  generatePattern();
 })();
 </script>
 </body>
