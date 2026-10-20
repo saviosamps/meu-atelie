@@ -4,29 +4,29 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Meu Ateliê — Molde de Saia</title>
+<title>Meu Ateliê — Modelagem de Saia</title>
 <style>
 *{box-sizing:border-box}
 body{margin:0;background:#f7f3ef;color:#342b2b;font:16px Arial,sans-serif}
-header{padding:20px;background:white;border-bottom:1px solid #e6dcd8}
+header{padding:20px;background:#fff;border-bottom:1px solid #e6dcd8}
 header h1{margin:0;color:#8a5966;font-family:Georgia,serif}
-main{max-width:900px;margin:auto;padding:16px}
-.card{background:white;padding:18px;border:1px solid #e6dcd8;border-radius:12px;margin-bottom:16px}
+main{max-width:960px;margin:auto;padding:16px}
+.card{background:#fff;padding:18px;border:1px solid #e6dcd8;border-radius:12px;margin-bottom:16px}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px}
 label{display:block;font-size:13px;margin-bottom:5px;color:#766a6a}
 input,select{width:100%;padding:10px;border:1px solid #d8ceca;border-radius:7px;font-size:16px}
-button{padding:12px 15px;background:#8a5966;color:white;border:0;border-radius:8px;margin:8px 5px 0 0;cursor:pointer}
+button{padding:12px 15px;background:#8a5966;color:#fff;border:0;border-radius:8px;margin:8px 5px 0 0;cursor:pointer}
 button:disabled{opacity:.5}
 .small{font-size:13px;line-height:1.5;color:#766a6a}
 .note{background:#f8f0e6;padding:12px;border-radius:8px;line-height:1.5}
-#error{color:#a12e2e}
+#error{color:#a12e2e;line-height:1.5}
 #result{display:none}
 #preview{overflow:auto;border:1px solid #eee;padding:8px}
-#preview svg{max-width:100%;height:auto}
+#preview svg{display:block;max-width:100%;height:auto}
 #printArea{display:none}
 @media print{
  @page{size:A4 portrait;margin:10mm}
- body{background:white}
+ body{background:white;margin:0}
  header,main{display:none!important}
  #printArea{display:block!important}
  .tile{width:190mm;height:277mm;overflow:hidden;break-after:page;page-break-after:always}
@@ -45,26 +45,26 @@ button:disabled{opacity:.5}
 <section class="card">
 <h2>Saia reta — cintura alta</h2>
 <p class="small">
-Informe as medidas corporais sem folga. A folga é acrescentada
-automaticamente. Meça a altura cintura–quadril a partir da posição
-em que a saia será usada. A frente é para cortar na dobra; as costas
-são divididas ao meio e recebem extensão para o zíper.
+Informe as medidas do corpo sem folga. A folga será adicionada
+automaticamente. Meça a cintura na altura em que a saia será usada.
+A altura cintura–quadril começa nessa mesma linha. O comprimento vai
+da cintura até a bainha desejada.
 </p>
 
 <div class="grid">
 <div><label for="client">Cliente</label><select id="client"><option value="">Medidas manuais</option></select></div>
 <div><label for="waist">Cintura (cm)</label><input id="waist" type="number" min="40" max="180" step=".1"></div>
 <div><label for="hip">Quadril (cm)</label><input id="hip" type="number" min="50" max="200" step=".1"></div>
-<div><label for="length">Comprimento (cm)</label><input id="length" type="number" min="25" max="120" step=".1"></div>
+<div><label for="length">Comprimento final (cm)</label><input id="length" type="number" min="25" max="120" step=".1"></div>
 <div><label for="hipDepth">Altura cintura–quadril (cm)</label><input id="hipDepth" type="number" min="15" max="35" step=".1" value="20"></div>
-<div><label for="waistEase">Folga cintura (cm)</label><input id="waistEase" type="number" min="0" max="8" step=".5" value="1"></div>
-<div><label for="hipEase">Folga quadril (cm)</label><input id="hipEase" type="number" min="0" max="12" step=".5" value="4"></div>
+<div><label for="waistEase">Folga da cintura (cm)</label><input id="waistEase" type="number" min="0" max="8" step=".5" value="1"></div>
+<div><label for="hipEase">Folga do quadril (cm)</label><input id="hipEase" type="number" min="0" max="12" step=".5" value="4"></div>
 <div><label for="seam">Margem de costura (cm)</label><input id="seam" type="number" min="0" max="2.5" step=".1" value="1.5"></div>
 <div><label for="hem">Margem de bainha (cm)</label><input id="hem" type="number" min="0" max="8" step=".5" value="4"></div>
-<div><label for="zip">Extensão para zíper nas costas (cm)</label><input id="zip" type="number" min="1" max="4" step=".5" value="2"></div>
+<div><label for="zip">Extensão do zíper traseiro (cm)</label><input id="zip" type="number" min="1" max="4" step=".5" value="2"></div>
 </div>
 
-<button id="generate">Gerar molde</button>
+<button id="generate">Gerar molde completo</button>
 <button id="print" disabled>Imprimir / salvar PDF A4</button>
 <p id="error" role="alert"></p>
 <p id="notice" class="note" hidden></p>
@@ -77,16 +77,25 @@ são divididas ao meio e recebem extensão para o zíper.
 </section>
 
 <section class="card">
-<h2>Legenda</h2>
+<h2>Como interpretar o molde</h2>
 <p class="small">
 Linha preta contínua: linha de costura. Linha cinza tracejada:
-contorno de corte aproximado. Linha colorida: centro, fio ou referência
-de quadril. Confira o quadrado de escala antes de cortar o tecido.
+contorno de corte estimado. Linha colorida: centro, fio ou linha de
+quadril. A frente é cortada na dobra do tecido. As costas são cortadas
+em duas peças espelhadas, com extensão para o zíper.
 </p>
 <p class="small">
-Esta versão é uma base experimental. A margem de costura e a curva
-lateral são aproximações geométricas, não um offset industrial exato.
-Faça uma peça de teste antes de utilizar tecido definitivo.
+Na impressão, selecione papel A4, escala de 100% ou tamanho real e
+desative opções como “ajustar à página”. Confira o quadrado de escala
+de 5 × 5 cm com uma régua. As folhas têm sobreposição nominal para
+auxiliar a montagem.
+</p>
+<p class="small">
+Importante: a curva lateral e o contorno de corte são aproximações
+geométricas. As pences calculadas precisam ser conferidas depois de
+fechadas, pois o corpo, o tecido e a distribuição real de volume
+influenciam o caimento. Faça um protótipo em tecido barato antes da
+peça definitiva.
 </p>
 </section>
 </main>
@@ -96,6 +105,7 @@ Faça uma peça de teste antes de utilizar tecido definitivo.
 <script>
 (function(){
 "use strict";
+
 const $=id=>document.getElementById(id);
 const KEY="meuAtelie_v1";
 const NS="http://www.w3.org/2000/svg";
@@ -109,16 +119,19 @@ function esc(value){
 }
 
 function loadClients(){
- const old=$("client").value;
+ const previous=$("client").value;
  try{
   const data=JSON.parse(localStorage.getItem(KEY)||"{}");
   clients=data&&Array.isArray(data.clients)
    ?data.clients.filter(c=>c&&typeof c==="object"&&typeof c.id==="string")
    :[];
- }catch(e){clients=[]}
+ }catch(e){
+  clients=[];
+ }
  $("client").innerHTML='<option value="">Medidas manuais</option>'+
-  clients.map(c=>'<option value="'+esc(c.id)+'">'+esc(c.name||"Cliente sem nome")+'</option>').join("");
- if(clients.some(c=>c.id===old))$("client").value=old;
+  clients.map(c=>'<option value="'+esc(c.id)+'">'+
+   esc(c.name||"Cliente sem nome")+'</option>').join("");
+ if(clients.some(c=>c.id===previous))$("client").value=previous;
 }
 
 function invalidate(){
@@ -139,23 +152,32 @@ function fillClient(client){
  invalidate();
  $("error").textContent="";
  const m=client&&client.measurements?client.measurements:{};
- [["waist","cintura"],["hip","quadril"],["length","saia"],["hipDepth","cinturaQuadril"]]
- .forEach(([id,key])=>{
+ const map=[
+  ["waist","cintura"],
+  ["hip","quadril"],
+  ["length","saia"],
+  ["hipDepth","cinturaQuadril"]
+ ];
+ map.forEach(([id,key])=>{
   const n=client?savedMeasure(m,key):null;
   $(id).value=n===null?(id==="hipDepth"?"20":""):n;
  });
  $("notice").hidden=false;
  $("notice").textContent=client
-  ?"Medidas carregadas. Confira a posição da cintura e a altura cintura–quadril."
+  ?"Medidas carregadas. Confira a altura cintura–quadril e a posição da cintura."
   :"Preencha as medidas manualmente.";
 }
 
 loadClients();
+
 $("client").addEventListener("change",()=>{
  fillClient(clients.find(c=>c.id===$("client").value)||null);
 });
-["waist","hip","length","hipDepth","waistEase","hipEase","seam","hem","zip"]
-.forEach(id=>$(id).addEventListener("input",invalidate));
+
+[
+ "waist","hip","length","hipDepth","waistEase","hipEase","seam","hem","zip"
+].forEach(id=>$(id).addEventListener("input",invalidate));
+
 window.addEventListener("storage",e=>{
  if(e.key===KEY||e.key===null)loadClients();
 });
@@ -165,103 +187,120 @@ function generate(){
  $("notice").hidden=true;
 
  const limits={
-  waist:[40,180],hip:[50,200],length:[25,120],hipDepth:[15,35],
-  waistEase:[0,8],hipEase:[0,12],seam:[0,2.5],hem:[0,8],zip:[1,4]
+  waist:[40,180],
+  hip:[50,200],
+  length:[25,120],
+  hipDepth:[15,35],
+  waistEase:[0,8],
+  hipEase:[0,12],
+  seam:[0,2.5],
+  hem:[0,8],
+  zip:[1,4]
  };
+
  const v={};
+
  for(const id in limits){
   const raw=$(id).value.trim();
   const n=Number(raw);
   const [min,max]=limits[id];
+
   if(raw===""||!Number.isFinite(n)||n<min||n>max){
-   $("error").textContent="Confira os valores e os limites indicados nos campos.";
+   $("error").textContent=
+    "Confira os valores e os limites indicados nos campos.";
    return;
   }
   v[id]=n;
  }
 
  if(v.hipDepth>=v.length){
-  $("error").textContent="A altura cintura–quadril precisa ser menor que o comprimento.";
+  $("error").textContent=
+   "A altura cintura–quadril precisa ser menor que o comprimento.";
   return;
  }
 
  const waist=v.waist+v.waistEase;
  const hip=v.hip+v.hipEase;
+
  if(hip<=waist){
-  $("error").textContent="O quadril com folga deve ser maior que a cintura com folga.";
+  $("error").textContent=
+   "O quadril com folga deve ser maior que a cintura com folga.";
   return;
  }
 
  const mm=cm=>cm*10;
 
- // Cada painel representa um quarto da circunferência total.
+ /*
+  * Base: cada painel representa um quarto da circunferência.
+  * Frente na dobra e duas metades traseiras espelhadas.
+  */
  const hipW=mm(hip/4);
  const waistW=mm(waist/4);
  const difference=hipW-waistW;
 
  if(difference<1){
-  $("error").textContent="A diferença entre cintura e quadril é pequena demais para esta base.";
+  $("error").textContent=
+   "A diferença entre cintura e quadril é pequena demais para esta base.";
   return;
  }
 
  /*
-  * A diferença entre quadril e cintura é distribuída entre:
-  * 40% de redução lateral e 60% de pences.
-  * Uma pence dianteira e duas traseiras dividem essa redução.
+  * A redução de cada painel é distribuída entre a lateral
+  * e as pences. A soma das aberturas de pence de um painel
+  * corresponde ao valor de dartTotal.
   */
- const sideIntake=difference*.40;
+ const sideIntake=difference*0.40;
  const dartTotal=difference-sideIntake;
- const frontDart=dartTotal/3;
- const backDart=dartTotal/3;
 
- /*
-  * A frente tem uma pence. As costas têm duas pences.
-  * Assim, uma frente + duas costas totalizam três parcelas.
-  */
+ // Uma pence na frente; duas na metade traseira.
+ const frontDart=dartTotal;
+ const backDart=dartTotal/2;
+
+ // Largura superior antes do fechamento das pences.
  const frontTop=hipW-sideIntake;
  const backTop=hipW-sideIntake;
 
- if(frontDart>hipW*.18||backDart>hipW*.18){
-  $("error").textContent="A diferença entre cintura e quadril é grande para esta base simples. Será preciso redistribuir as pences.";
+ if(frontDart>hipW*0.22||backDart>hipW*0.22){
+  $("error").textContent=
+   "A diferença entre cintura e quadril é grande para esta base simples. A distribuição das pences precisa de modelagem adicional.";
   return;
  }
 
  const seam=mm(v.seam);
  const hemAllowance=mm(v.hem);
  const zip=mm(v.zip);
- const xF=30;
- const gap=50;
+
+ const xF=35;
+ const gap=55;
  const xB=xF+hipW+gap;
- const y=48;
+ const y=55;
  const hipY=mm(v.hipDepth);
  const L=mm(v.length);
  const bottom=y+L;
- const canvasW=xB+hipW+zip+seam+40;
- const canvasH=bottom+hemAllowance+100;
 
- function makePanel(x,kind){
+ const canvasW=xB+hipW+zip+seam+45;
+ const canvasH=bottom+hemAllowance+105;
+
+ function panelGeometry(x,kind){
   const top=kind==="front"?frontTop:backTop;
   const waistX=x+top;
   const side=x+hipW;
   const yHip=y+hipY;
 
-  /*
-   * A curva lateral começa na cintura e alcança o quadril.
-   * A bainha permanece reta, como em uma saia reta básica.
-   */
   const shape=[
    `M ${x} ${y}`,
    `L ${waistX} ${y}`,
-   `C ${waistX+(side-waistX)*.25} ${y+hipY*.22},`,
-   `${side} ${y+hipY*.58}, ${side} ${yHip}`,
+   `C ${waistX+(side-waistX)*0.22} ${y+hipY*0.24}`,
+   `${side} ${y+hipY*0.58}`,
+   `${side} ${yHip}`,
    `L ${side} ${bottom}`,
    `L ${x} ${bottom} Z`
   ].join(" ");
 
   /*
-   * Contorno de corte aproximado: margem lateral e bainha.
-   * A frente mantém o centro na dobra. As costas têm extensão
-   * adicional para o zíper no centro traseiro.
+   * Corte estimado: margem no topo, lateral e bainha.
+   * Centro dianteiro na dobra; centro traseiro com extensão
+   * adicional para o zíper. A curva externa é aproximada.
    */
   const cutLeft=kind==="front"?x:x-zip-seam;
   const cutTopLeft=kind==="front"?x:x-zip-seam;
@@ -272,8 +311,9 @@ function generate(){
   const cut=[
    `M ${cutTopLeft} ${y-seam}`,
    `L ${cutTopRight} ${y-seam}`,
-   `C ${cutTopRight+(side-waistX)*.25} ${y+hipY*.22-seam},`,
-   `${cutSide} ${y+hipY*.58}, ${cutSide} ${yHip}`,
+   `C ${cutTopRight+(side-waistX)*0.22} ${y+hipY*0.24-seam}`,
+   `${cutSide} ${y+hipY*0.58}`,
+   `${cutSide} ${yHip}`,
    `L ${cutSide} ${cutBottom}`,
    `L ${cutLeft} ${cutBottom} Z`
   ].join(" ");
@@ -281,86 +321,157 @@ function generate(){
   return {shape,cut,top,waistX,side,yHip};
  }
 
- function dart(x,width,length){
+ function dartPath(center,width,length){
   const tip=y+length;
-  return `<path d="M ${x-width/2} ${y} L ${x} ${tip} L ${x+width/2} ${y}"
+  return `<path d="M ${center-width/2} ${y}
+    L ${center} ${tip}
+    L ${center+width/2} ${y}"
     fill="none" stroke="#222" stroke-width=".7"/>`;
  }
 
  function drawPanel(x,label,kind){
-  const p=makePanel(x,kind);
+  const p=panelGeometry(x,kind);
   let darts="";
+
   if(kind==="front"){
-   darts=dart(x+p.top*.56,frontDart,Math.min(mm(9),hipY*.48));
+   const center=x+p.top*0.56;
+   const length=Math.min(mm(9),hipY*0.48);
+   darts=dartPath(center,frontDart,length);
   }else{
+   const center1=x+p.top*0.34;
+   const center2=x+p.top*0.72;
    darts=
-    dart(x+p.top*.34,backDart,Math.min(mm(13),hipY*.62))+
-    dart(x+p.top*.72,backDart,Math.min(mm(11),hipY*.52));
+    dartPath(center1,backDart,Math.min(mm(13),hipY*0.62))+
+    dartPath(center2,backDart,Math.min(mm(11),hipY*0.52));
   }
 
   const centerLine=kind==="front"
-   ?`<line x1="${x}" y1="${y}" x2="${x}" y2="${bottom}" stroke="#8a5966" stroke-width=".8" stroke-dasharray="4 2"/>`
-   :`<line x1="${x}" y1="${y}" x2="${x}" y2="${bottom}" stroke="#b36a22" stroke-width=".8" stroke-dasharray="3 2"/>`;
+   ?`<line x1="${x}" y1="${y}" x2="${x}" y2="${bottom}"
+      stroke="#8a5966" stroke-width=".8" stroke-dasharray="4 2"/>`
+   :`<line x1="${x}" y1="${y}" x2="${x}" y2="${bottom}"
+      stroke="#b36a22" stroke-width=".8" stroke-dasharray="3 2"/>`;
 
-  const grainX=x+p.top*.52;
+  const grainX=x+p.top*0.52;
+  const centerLabel=kind==="front"
+   ?"CENTRO FRENTE — DOBRA"
+   :"CENTRO COSTAS — ZÍPER";
+
   const zipLabel=kind==="back"
-   ?`<text x="${x-zip/2}" y="${y+L*.55}" text-anchor="middle" font-size="4" font-family="Arial">EXTENSÃO ZÍPER</text>`
+   ?`<text x="${x-zip/2}" y="${y+L*.55}" text-anchor="middle"
+      font-size="4" font-family="Arial">EXTENSÃO ZÍPER</text>`
    :"";
 
   return `<g>
-   <path d="${p.cut}" fill="none" stroke="#888" stroke-width=".5" stroke-dasharray="3 2"/>
+   <path d="${p.cut}" fill="none" stroke="#888"
+    stroke-width=".5" stroke-dasharray="3 2"/>
    <path d="${p.shape}" fill="none" stroke="#222" stroke-width=".8"/>
    ${centerLine}
    ${darts}
-   <line x1="${x}" y1="${p.yHip}" x2="${p.side}" y2="${p.yHip}" stroke="#387a65" stroke-width=".5" stroke-dasharray="3 2"/>
-   <line x1="${grainX}" y1="${y+L*.30}" x2="${grainX}" y2="${y+L*.78}" stroke="#387a65" stroke-width=".5" stroke-dasharray="5 3"/>
-   <text x="${x+p.top/2}" y="${y-8}" text-anchor="middle" font-size="5" font-family="Arial">${label}</text>
-   <text x="${x+p.top/2}" y="${bottom+8}" text-anchor="middle" font-size="4.5" font-family="Arial">${kind==="front"?"CENTRO FRENTE — DOBRA":"CENTRO COSTAS — ZÍPER"}</text>
-   <text x="${x+p.top*.55}" y="${p.yHip-3}" font-size="4" font-family="Arial">LINHA DO QUADRIL</text>
-   <text x="${x+p.top*.55}" y="${bottom-4}" font-size="4" font-family="Arial">BAINHA</text>
+
+   <line x1="${x}" y1="${p.yHip}" x2="${p.side}" y2="${p.yHip}"
+    stroke="#387a65" stroke-width=".5" stroke-dasharray="3 2"/>
+
+   <line x1="${grainX}" y1="${y+L*.30}"
+    x2="${grainX}" y2="${y+L*.78}"
+    stroke="#387a65" stroke-width=".5" stroke-dasharray="5 3"/>
+
+   <text x="${x+p.top/2}" y="${y-9}" text-anchor="middle"
+    font-size="5" font-family="Arial">${label}</text>
+
+   <text x="${x+p.top/2}" y="${bottom+8}" text-anchor="middle"
+    font-size="4.5" font-family="Arial">${centerLabel}</text>
+
+   <text x="${x+p.top*.55}" y="${p.yHip-3}"
+    font-size="4" font-family="Arial">LINHA DO QUADRIL</text>
+
+   <text x="${x+p.top*.55}" y="${bottom-4}"
+    font-size="4" font-family="Arial">BAINHA</text>
+
    ${zipLabel}
   </g>`;
  }
 
+ const squareX=25;
+ const squareY=bottom+hemAllowance+22;
+
  const drawing=`
  <rect width="${canvasW}" height="${canvasH}" fill="white"/>
- <text x="25" y="12" font-size="7" font-family="Arial">MEU ATELIÊ — SAIA RETA</text>
- <text x="25" y="22" font-size="4.5" font-family="Arial">Cintura ${v.waist} cm | Quadril ${v.hip} cm | Comprimento ${v.length} cm</text>
- <text x="25" y="31" font-size="4.5" font-family="Arial">Folgas: ${v.waistEase}/${v.hipEase} cm | Costura: ${v.seam} cm | Bainha: ${v.hem} cm</text>
+
+ <text x="25" y="13" font-size="7" font-family="Arial">
+ MEU ATELIÊ — SAIA RETA
+ </text>
+
+ <text x="25" y="23" font-size="4.5" font-family="Arial">
+ Cintura ${v.waist} cm | Quadril ${v.hip} cm | Comprimento ${v.length} cm
+ </text>
+
+ <text x="25" y="32" font-size="4.5" font-family="Arial">
+ Folgas: ${v.waistEase} cm / ${v.hipEase} cm |
+ Costura: ${v.seam} cm | Bainha: ${v.hem} cm
+ </text>
+
  ${drawPanel(xF,"FRENTE — CORTAR NA DOBRA","front")}
  ${drawPanel(xB,"COSTAS — CORTAR 2 ESPELHADAS","back")}
- <rect x="25" y="${bottom+hemAllowance+18}" width="50" height="50" fill="none" stroke="#222" stroke-width=".8"/>
- <text x="25" y="${bottom+hemAllowance+15}" font-size="4.5" font-family="Arial">QUADRADO DE ESCALA: 5 × 5 cm</text>`;
+
+ <rect x="${squareX}" y="${squareY}" width="50" height="50"
+  fill="none" stroke="#222" stroke-width=".8"/>
+
+ <text x="${squareX}" y="${squareY-4}" font-size="4.5"
+  font-family="Arial">QUADRADO DE ESCALA: 5 × 5 cm</text>`;
 
  $("preview").innerHTML=
-  `<svg xmlns="${NS}" width="${canvasW}mm" height="${canvasH}mm" viewBox="0 0 ${canvasW} ${canvasH}">${drawing}</svg>`;
+  `<svg xmlns="${NS}" width="${canvasW}mm" height="${canvasH}mm"
+   viewBox="0 0 ${canvasW} ${canvasH}">${drawing}</svg>`;
 
- // A4 com sobreposição nominal de 10 mm.
- const pageW=190,pageH=277,stepW=180,stepH=267,overlap=10;
+ /*
+  * Paginação A4. Área de impressão: 190 × 277 mm.
+  * Passo de 180 × 267 mm: sobreposição nominal de 10 mm.
+  */
+ const pageW=190;
+ const pageH=277;
+ const stepW=180;
+ const stepH=267;
+ const overlap=10;
+
  const cols=Math.max(1,Math.ceil((canvasW-overlap)/stepW));
  const rows=Math.max(1,Math.ceil((canvasH-overlap)/stepH));
  const pages=[];
 
  for(let r=0;r<rows;r++){
   for(let c=0;c<cols;c++){
-   const px=c*stepW,py=r*stepH;
-   pages.push(`<div class="tile">
-    <svg xmlns="${NS}" width="190mm" height="277mm" viewBox="${px} ${py} ${pageW} ${pageH}">
-     ${drawing}
-     <path d="M ${px+5} ${py+10} h 8 M ${px+9} ${py+6} v 8" stroke="#777" stroke-width=".5" fill="none"/>
-     <text x="${px+16}" y="${py+10}" font-size="4" font-family="Arial">FOLHA ${r+1}-${c+1}</text>
-    </svg>
-   </div>`);
+   const px=c*stepW;
+   const py=r*stepH;
+
+   pages.push(`
+    <div class="tile">
+     <svg xmlns="${NS}" width="190mm" height="277mm"
+      viewBox="${px} ${py} ${pageW} ${pageH}">
+      ${drawing}
+
+      <path d="M ${px+5} ${py+10} h 8
+       M ${px+9} ${py+6} v 8"
+       stroke="#777" stroke-width=".5" fill="none"/>
+
+      <text x="${px+16}" y="${py+10}" font-size="4"
+       font-family="Arial">FOLHA ${r+1}-${c+1}</text>
+     </svg>
+    </div>`);
   }
  }
 
  $("printArea").innerHTML=pages.join("");
+
  $("summary").textContent=
-  `Cintura com folga: ${waist.toFixed(1)} cm. Quadril com folga: ${hip.toFixed(1)} cm. `+
-  `Pence dianteira: ${frontDart.toFixed(1)} mm. Cada pence traseira: ${backDart.toFixed(1)} mm. `+
-  `Margem de costura configurada: ${v.seam} cm. Bainha: ${v.hem} cm. `+
-  `Extensão adicional do zíper: ${v.zip} cm. Paginação estimada: ${cols*rows} folhas. `+
-  `Confirme as medidas e a escala antes de cortar: o contorno de corte ainda é aproximado.`;
+  `Cintura com folga: ${waist.toFixed(1)} cm. `+
+  `Quadril com folga: ${hip.toFixed(1)} cm. `+
+  `Largura de cada painel na linha do quadril: ${(hip/4).toFixed(1)} cm. `+
+  `Abertura da pence dianteira: ${(frontDart/10).toFixed(2)} cm. `+
+  `Abertura de cada pence traseira: ${(backDart/10).toFixed(2)} cm. `+
+  `Margem de costura configurada: ${v.seam} cm. `+
+  `Margem de bainha: ${v.hem} cm. `+
+  `Extensão do zíper: ${v.zip} cm. `+
+  `Paginação estimada: ${cols*rows} folhas A4. `+
+  `As larguras finais e o caimento devem ser conferidos com as pences fechadas e em tecido de teste.`;
 
  $("result").style.display="block";
  $("print").disabled=false;
@@ -368,7 +479,11 @@ function generate(){
 }
 
 $("generate").addEventListener("click",generate);
-$("print").addEventListener("click",()=>{if(generated)window.print();});
+
+$("print").addEventListener("click",()=>{
+ if(generated)window.print();
+});
+
 })();
 </script>
 </body>
