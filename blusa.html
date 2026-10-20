@@ -1,0 +1,557 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meu Ateliê — Gerador de Blusas</title>
+<style>
+:root{--bg:#f7f3ef;--card:#fff;--ink:#342b2b;--muted:#817575;--accent:#8a5966;--line:#e9dfdc}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px Arial,sans-serif}
+header{background:#fff;padding:20px;border-bottom:1px solid var(--line)}
+header h1{margin:0;color:var(--accent);font-family:Georgia,serif}
+header p{margin:7px 0 0;color:var(--muted);font-size:14px}
+main{max-width:1100px;margin:auto;padding:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:18px;margin-bottom:16px}
+h2{font-size:20px;margin:0 0 14px}
+h3{font-size:16px;margin:20px 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px}
+label{display:block;font-size:13px;color:var(--muted);margin-bottom:5px}
+input,select{width:100%;padding:10px;border:1px solid #d9ceca;border-radius:8px;font:inherit;background:white;color:var(--ink)}
+button,.btn{display:inline-block;padding:11px 14px;border:0;border-radius:8px;background:var(--accent);color:white;text-decoration:none;cursor:pointer;margin:8px 5px 0 0}
+button.secondary{background:#eee5e3;color:var(--ink)}
+button:disabled{opacity:.5;cursor:not-allowed}
+.small{font-size:13px;line-height:1.55;color:var(--muted)}
+.note{font-size:13px;line-height:1.55;padding:12px;background:#f8f0e6;border-radius:9px}
+#error{color:#a12e2e;white-space:pre-line}
+#result{display:none}
+#preview{overflow:auto}
+#preview svg{max-width:100%;height:auto}
+#printArea{display:none}
+.hidden{display:none!important}
+@media print{
+ @page{size:A4 portrait;margin:0}
+ body{margin:0;background:white}
+ header,main{display:none!important}
+ #printArea{display:block!important}
+ .tile{width:190mm;height:277mm;overflow:hidden;break-after:page;page-break-after:always}
+ .tile:last-child{break-after:auto;page-break-after:auto}
+ .tile svg{width:190mm;height:277mm;display:block}
+}
+</style>
+</head>
+<body>
+<header>
+<h1>Meu Ateliê</h1>
+<p>Gerador de blusas, camisetas, polos e camisas sociais</p>
+</header>
+
+<main>
+<section class="card">
+<h2>1. Escolha o modelo</h2>
+<div class="grid">
+<div>
+<label for="client">Cliente</label>
+<select id="client"><option value="">Medidas manuais</option></select>
+</div>
+<div>
+<label for="style">Tipo de blusa</label>
+<select id="style">
+<option value="basic">Camiseta básica</option>
+<option value="polo">Blusa polo</option>
+<option value="social">Camisa social</option>
+</select>
+</div>
+<div>
+<label for="sleeve">Modelo da manga</label>
+<select id="sleeve">
+<option value="set">Manga convencional</option>
+<option value="raglan">Manga raglan</option>
+</select>
+</div>
+<div>
+<label for="sleeveLength">Comprimento da manga</label>
+<select id="sleeveLength">
+<option value="short">Manga curta</option>
+<option value="long">Manga longa</option>
+</select>
+</div>
+<div>
+<label for="collar">Gola</label>
+<select id="collar">
+<option value="round">Redonda</option>
+<option value="v">Em V</option>
+<option value="polo">Gola polo</option>
+<option value="shirt">Colarinho social</option>
+<option value="none">Sem gola acrescentada</option>
+</select>
+</div>
+<div>
+<label for="opening">Abertura frontal</label>
+<select id="opening">
+<option value="none">Sem abertura</option>
+<option value="buttons">Vista com botões</option>
+<option value="polo">Abertura polo</option>
+</select>
+</div>
+<div>
+<label for="cuff">Acabamento da manga</label>
+<select id="cuff">
+<option value="simple">Barra simples</option>
+<option value="rib">Punho de malha</option>
+<option value="shirt">Punho de camisa</option>
+</select>
+</div>
+<div>
+<label for="pocket">Bolso frontal</label>
+<select id="pocket">
+<option value="no">Sem bolso</option>
+<option value="yes">Bolso aplicado</option>
+</select>
+</div>
+<div>
+<label for="fit">Caimento</label>
+<select id="fit">
+<option value="regular">Confortável clássico</option>
+<option value="loose">Solto</option>
+<option value="slim">Mais ajustado</option>
+</select>
+</div>
+<div>
+<label for="hemShape">Barra inferior</label>
+<select id="hemShape">
+<option value="straight">Reta</option>
+<option value="curve">Levemente arredondada</option>
+</select>
+</div>
+</div>
+
+<p class="small">As combinações podem ser personalizadas. Em geral, camiseta combina com gola redonda ou V; polo com gola polo e abertura; camisa social com colarinho, vista de botões e punhos.</p>
+</section>
+
+<section class="card">
+<h2>2. Medidas corporais</h2>
+<p class="small">Informe medidas do corpo, sem acrescentar folga. Use centímetros e mantenha a fita métrica confortável, sem apertar.</p>
+<div class="grid">
+<div><label for="neck">Contorno do pescoço (cm)</label><input id="neck" type="number" min="25" max="70" step=".1"></div>
+<div><label for="chest">Tórax / busto (cm)</label><input id="chest" type="number" min="55" max="180" step=".1"></div>
+<div><label for="waist">Cintura (cm)</label><input id="waist" type="number" min="45" max="180" step=".1"></div>
+<div><label for="hip">Quadril (cm)</label><input id="hip" type="number" min="55" max="200" step=".1"></div>
+<div><label for="back">Comprimento das costas até a cintura (cm)</label><input id="back" type="number" min="25" max="75" step=".1"></div>
+<div><label for="length">Comprimento total da blusa (cm)</label><input id="length" type="number" min="35" max="120" step=".1"></div>
+<div><label for="shoulder">Largura de ombro a ombro (cm)</label><input id="shoulder" type="number" min="25" max="65" step=".1"></div>
+<div><label for="shoulderLength">Comprimento de um ombro (cm)</label><input id="shoulderLength" type="number" min="8" max="25" step=".1"></div>
+<div><label for="armhole">Profundidade da cava (cm)</label><input id="armhole" type="number" min="12" max="40" step=".1"></div>
+<div><label for="arm">Contorno do braço (cm)</label><input id="arm" type="number" min="15" max="70" step=".1"></div>
+<div><label for="wrist">Contorno do punho (cm)</label><input id="wrist" type="number" min="12" max="35" step=".1"></div>
+<div><label for="sleeveMeasure">Comprimento do braço (cm)</label><input id="sleeveMeasure" type="number" min="20" max="85" step=".1"></div>
+<div><label for="bicepToElbow">Contorno do cotovelo (cm)</label><input id="bicepToElbow" type="number" min="18" max="60" step=".1"></div>
+</div>
+
+<h3>Folgas e acabamento</h3>
+<div class="grid">
+<div><label for="chestEase">Folga do tórax (cm)</label><input id="chestEase" type="number" min="0" max="25" step=".5" value="8"></div>
+<div><label for="waistEase">Folga da cintura (cm)</label><input id="waistEase" type="number" min="0" max="25" step=".5" value="8"></div>
+<div><label for="hipEase">Folga do quadril (cm)</label><input id="hipEase" type="number" min="0" max="25" step=".5" value="8"></div>
+<div><label for="armEase">Folga do braço (cm)</label><input id="armEase" type="number" min="0" max="15" step=".5" value="6"></div>
+<div><label for="neckDrop">Profundidade da gola frontal (cm)</label><input id="neckDrop" type="number" min="3" max="18" step=".5" value="8"></div>
+<div><label for="neckBack">Profundidade da gola traseira (cm)</label><input id="neckBack" type="number" min="1" max="8" step=".5" value="2.5"></div>
+<div><label for="collarHeight">Altura do colarinho (cm)</label><input id="collarHeight" type="number" min="2" max="8" step=".5" value="3.5"></div>
+<div><label for="placket">Comprimento da abertura (cm)</label><input id="placket" type="number" min="5" max="25" step=".5" value="14"></div>
+<div><label for="buttonWidth">Largura total da vista (cm)</label><input id="buttonWidth" type="number" min="2" max="8" step=".5" value="3"></div>
+<div><label for="cuffHeight">Altura do punho (cm)</label><input id="cuffHeight" type="number" min="2" max="10" step=".5" value="5"></div>
+<div><label for="hemAllowance">Margem para barra (cm)</label><input id="hemAllowance" type="number" min="1" max="8" step=".5" value="3"></div>
+<div><label for="seam">Margem de costura (cm)</label><input id="seam" type="number" min=".5" max="3" step=".1" value="1"></div>
+<div><label for="shirtEase">Folga adicional da camisa social (cm)</label><input id="shirtEase" type="number" min="0" max="10" step=".5" value="2"></div>
+</div>
+
+<button id="generate">Gerar molde completo</button>
+<button id="print" disabled>Imprimir / salvar PDF A4</button>
+<a class="btn" href="index.html">Voltar ao Meu Ateliê</a>
+<p id="error"></p>
+<p id="status" class="small"></p>
+</section>
+
+<section class="card" id="result">
+<h2>3. Prévia do molde</h2>
+<p id="summary" class="note"></p>
+<div id="preview"></div>
+</section>
+
+<section class="card">
+<h2>Instruções de impressão</h2>
+<p class="small">Imprima em papel A4, escala 100% ou tamanho real, sem “ajustar à página”. Confira o quadrado de 5 × 5 cm com régua. As folhas são organizadas com área nominal de 190 × 277 mm e sobreposição de 10 mm.</p>
+<p class="note">Esta ferramenta é uma base de modelagem paramétrica. O desenho oferece peças e referências de construção, mas não substitui a validação do encaixe das costuras, da cabeça da manga, das cavas, do colarinho e dos acabamentos. Antes de usar tecido definitivo, confira as medidas e faça uma peça de prova.</p>
+</section>
+</main>
+<div id="printArea"></div>
+
+<script>
+(function(){
+"use strict";
+const $=id=>document.getElementById(id);
+const NS="http://www.w3.org/2000/svg";
+const STORE_KEY="meuAtelie_v1";
+let ready=false;
+
+function esc(s){
+ return String(s??"").replace(/[&<>"']/g,c=>({
+ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
+function num(id){return Number($(id).value);}
+function invalidate(){
+ ready=false;$("print").disabled=true;
+ $("result").style.display="none";
+ $("preview").innerHTML="";$("printArea").innerHTML="";
+}
+const fieldIds=[
+ "style","sleeve","sleeveLength","collar","opening","cuff","pocket","fit","hemShape",
+ "neck","chest","waist","hip","back","length","shoulder","shoulderLength","armhole",
+ "arm","wrist","sleeveMeasure","bicepToElbow","chestEase","waistEase","hipEase",
+ "armEase","neckDrop","neckBack","collarHeight","placket","buttonWidth","cuffHeight",
+ "hemAllowance","seam","shirtEase"
+];
+fieldIds.forEach(id=>$(id).addEventListener("input",invalidate));
+
+function loadClients(){
+ let data={};
+ try{data=JSON.parse(localStorage.getItem(STORE_KEY)||"{}")}catch(e){}
+ const clients=Array.isArray(data.clients)?data.clients:[];
+ $("client").innerHTML='<option value="">Medidas manuais</option>'+
+ clients.filter(c=>c&&typeof c.id==="string").map(c=>
+ '<option value="'+esc(c.id)+'">'+esc(c.name||"Cliente sem nome")+'</option>'
+ ).join("");
+}
+function loadClient(){
+ invalidate();
+ let data={};
+ try{data=JSON.parse(localStorage.getItem(STORE_KEY)||"{}")}catch(e){}
+ const c=(data.clients||[]).find(x=>x&&x.id===$("client").value);
+ if(!c)return;
+ const m=c.measurements||{};
+ const map={
+  neck:"pescoço",chest:"busto",waist:"cintura",hip:"quadril",
+  back:"tronco",length:"blusa",shoulder:"ombro",
+  sleeveMeasure:"manga",arm:"braco",wrist:"punho"
+ };
+ Object.entries(map).forEach(([id,key])=>{
+  if(Number(m[key])>0)$(id).value=m[key];
+ });
+ $("status").textContent="Medidas encontradas carregadas. Confira e complete as medidas específicas.";
+}
+loadClients();
+$("client").addEventListener("change",loadClient);
+window.addEventListener("storage",e=>{
+ if(e.key===STORE_KEY||e.key===null)loadClients();
+});
+
+function generate(){
+ $("error").textContent="";$("status").textContent="";
+ const limits={
+  neck:[25,70],chest:[55,180],waist:[45,180],hip:[55,200],
+  back:[25,75],length:[35,120],shoulder:[25,65],shoulderLength:[8,25],
+  armhole:[12,40],arm:[15,70],wrist:[12,35],sleeveMeasure:[20,85],
+  bicepToElbow:[18,60],chestEase:[0,25],waistEase:[0,25],hipEase:[0,25],
+  armEase:[0,15],neckDrop:[3,18],neckBack:[1,8],collarHeight:[2,8],
+  placket:[5,25],buttonWidth:[2,8],cuffHeight:[2,10],hemAllowance:[1,8],
+  seam:[.5,3],shirtEase:[0,10]
+ };
+ const v={};
+ for(const [id,range] of Object.entries(limits)){
+  const raw=$(id).value.trim(),n=Number(raw);
+  if(!raw||!Number.isFinite(n)||n<range[0]||n>range[1]){
+   $("error").textContent="Preencha todos os campos numéricos com valores dentro dos limites indicados.";
+   return;
+  }
+  v[id]=n;
+ }
+ if(v.waist>v.chest*1.3||v.hip<v.waist*.7||v.shoulder>v.chest){
+  $("error").textContent="Confira as proporções informadas para tórax, cintura, quadril e ombros.";
+  return;
+ }
+ const style=$("style").value;
+ const sleeve=$("sleeve").value;
+ const sleeveLength=$("sleeveLength").value;
+ const collar=$("collar").value;
+ const opening=$("opening").value;
+ const cuff=$("cuff").value;
+ const fit=$("fit").value;
+ const hemShape=$("hemShape").value;
+ const pocket=$("pocket").value==="yes";
+ const mm=n=>n*10;
+ const seam=mm(v.seam);
+ const hemAllow=mm(v.hemAllowance);
+ const ease=fit==="slim"?Math.max(2,v.chestEase-4):
+            fit==="loose"?v.chestEase+8:v.chestEase;
+ const shirtExtra=style==="social"?v.shirtEase:0;
+ const chestTotal=v.chest+ease+shirtExtra;
+ const waistTotal=v.waist+v.waistEase+shirtExtra;
+ const hipTotal=v.hip+v.hipEase+shirtExtra;
+ const chestQuarter=mm(chestTotal)/4;
+ const waistQuarter=mm(waistTotal)/4;
+ const hipQuarter=mm(hipTotal)/4;
+ const bodyWidth=Math.max(chestQuarter,waistQuarter,hipQuarter);
+ const bodyLength=mm(v.length);
+ const armhole=mm(v.armhole);
+ const neckW=mm(Math.max(v.neck/6,7));
+ const neckFront=mm(v.neckDrop);
+ const neckBack=mm(v.neckBack);
+ const shoulderDrop=mm(3);
+ const shoulderW=mm(v.shoulder/2);
+ const bodyTop=100;
+ const bodyBottom=bodyTop+bodyLength;
+ const underarmY=bodyTop+armhole;
+ const waistY=bodyTop+mm(v.back);
+ const hipY=Math.min(bodyBottom-mm(8),waistY+mm(20));
+ const bodyX=100;
+ const backX=bodyX+bodyWidth+mm(15);
+ const sleeveX=backX+bodyWidth+mm(20);
+ const extrasX=sleeveX+mm(v.arm+v.armEase)+mm(25);
+ const topExtra=bodyTop+mm(12);
+ const sleeveW=mm(v.arm+v.armEase);
+ const sleeveH=sleeveLength==="long"?mm(v.sleeveMeasure):mm(Math.min(v.sleeveMeasure,25));
+ const wristW=sleeveLength==="long"?mm(v.wrist+2):sleeveW*.78;
+ const cuffH=mm(v.cuffHeight);
+ const cuffW=sleeveLength==="long"&&cuff==="shirt"?mm(v.wrist+4):wristW;
+ const collarH=mm(v.collarHeight);
+ const placketL=mm(v.placket);
+ const buttonW=mm(v.buttonWidth);
+ const pocketW=mm(11);
+ const pocketH=mm(13);
+
+ function txt(x,y,s,size=5,anchor="middle"){
+  return '<text x="'+x+'" y="'+y+'" font-size="'+size+
+  '" text-anchor="'+anchor+'" fill="#222">'+esc(s)+'</text>';
+ }
+ function ln(x1,y1,x2,y2,color="#333",dash=""){
+  return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+
+   '" stroke="'+color+'" stroke-width=".8" '+(dash?'stroke-dasharray="'+dash+'"':'')+'/>';
+ }
+ function path(d,stroke="#222",fill="none",sw=1){
+  return '<path d="'+d+'" fill="'+fill+'" stroke="'+stroke+'" stroke-width="'+sw+'"/>';
+ }
+ function rect(x,y,w,h,label){
+  return '<rect x="'+x+'" y="'+y+'" width="'+w+'" height="'+h+
+   '" fill="none" stroke="#222" stroke-width="1"/>'+
+   txt(x+w/2,y-5,label,4.5);
+ }
+ function frontBody(){
+  const x=bodyX,w=bodyWidth;
+  const shoulderEnd=x+shoulderW;
+  const neckX=x+neckW;
+  const sideX=x+w;
+  const waistX=x+waistQuarter;
+  const hipX=x+hipQuarter;
+  const sleeveCurveX=x+w*.91;
+  const bottomX=x+w;
+  const neckD=collar==="v"?neckFront:neckFront;
+  let d;
+  if(hemShape==="curve"){
+   d=`M ${x} ${bodyTop+neckD} Q ${x+neckW*.35} ${bodyTop+neckD*.15} ${neckX} ${bodyTop}
+    L ${shoulderEnd} ${bodyTop+shoulderDrop} L ${sleeveCurveX} ${underarmY}
+    Q ${sideX} ${underarmY+mm(8)} ${sideX} ${underarmY+mm(14)}
+    L ${sideX} ${bodyBottom-mm(6)} Q ${x+w*.5} ${bodyBottom+mm(2)} ${x} ${bodyBottom-mm(6)} Z`;
+  }else{
+   d=`M ${x} ${bodyTop+neckD} Q ${x+neckW*.35} ${bodyTop+neckD*.15} ${neckX} ${bodyTop}
+    L ${shoulderEnd} ${bodyTop+shoulderDrop} L ${sleeveCurveX} ${underarmY}
+    Q ${sideX} ${underarmY+mm(8)} ${sideX} ${underarmY+mm(14)}
+    L ${sideX} ${bodyBottom} L ${x} ${bodyBottom} Z`;
+  }
+  let out=path(d);
+  out+=ln(x,bodyTop+neckD,x,bodyBottom,"#888","4 3");
+  out+=ln(x,bodyTop+neckD,x+mm(2),bodyTop+neckD,"#9a5968");
+  out+=ln(x,bodyTop+neckD,x+mm(2),bodyTop+neckD+placketL,"#9a5968","3 2");
+  out+=ln(x,waistY,x+w,waistY,"#547f70","3 2");
+  out+=ln(x,hipY,x+w,hipY,"#547f70","3 2");
+  out+=txt(x+w*.5,bodyTop+mm(12),"FRENTE",5);
+  out+=txt(x+w*.5,bodyTop+mm(20),"CORTAR 2 OU 1 NA DOBRA",3.8);
+  out+=txt(x+w*.5,waistY-4,"LINHA DA CINTURA",3.5);
+  out+=txt(x+w*.5,hipY-4,"LINHA DO QUADRIL",3.5);
+  if(collar==="v"){
+   out+=path(`M ${x} ${bodyTop+neckD} L ${x+neckW*.7} ${bodyTop+neckD+mm(4)}`,"#9a5968");
+  }
+  if(opening!=="none"){
+   const l=opening==="polo"?placketL:Math.min(mm(18),bodyLength*.30);
+   out+=rect(x+mm(1),bodyTop+neckD,l>0?buttonW:mm(3),l,"VISTA");
+   if(opening==="buttons"){
+    for(let i=1;i<=4;i++)out+= '<circle cx="'+(x+buttonW/2+mm(.5))+'" cy="'+(bodyTop+neckD+mm(i*3))+'" r="1.2" fill="none" stroke="#222"/>';
+   }
+  }
+  if(pocket){
+   out+=path(`M ${x+w*.58} ${bodyTop+mm(25)} L ${x+w*.86} ${bodyTop+mm(25)} L ${x+w*.86} ${bodyTop+mm(38)} Q ${x+w*.72} ${bodyTop+mm(41)} ${x+w*.58} ${bodyTop+mm(38)} Z`,"#547f70");
+   out+=txt(x+w*.72,bodyTop+mm(32),"BOLSO",3.5);
+  }
+  if(sleeve==="raglan"){
+   out+=path(`M ${x+neckW} ${bodyTop+mm(2)} Q ${x+w*.22} ${bodyTop+mm(8)} ${x+w*.12} ${underarmY-mm(3)}`,"#9a5968","none",1.1);
+   out+=txt(x+w*.40,underarmY-mm(5),"LINHA RAGLAN",3.5);
+  }
+  out+=ln(x+w*.52,bodyTop+mm(18),x+w*.52,bodyBottom-mm(5),"#387a65","5 3");
+  return out;
+ }
+ function backBody(){
+  const x=backX,w=bodyWidth;
+  const shoulderEnd=x+shoulderW;
+  const neckX=x+neckW;
+  const sideX=x+w;
+  const sleeveCurveX=x+w*.91;
+  let d=`M ${x} ${bodyTop+neckBack} Q ${x+neckW*.35} ${bodyTop+neckBack*.15} ${neckX} ${bodyTop}
+   L ${shoulderEnd} ${bodyTop+shoulderDrop} L ${sleeveCurveX} ${underarmY}
+   Q ${sideX} ${underarmY+mm(8)} ${sideX} ${underarmY+mm(14)}
+   L ${sideX} ${bodyBottom} L ${x} ${bodyBottom} Z`;
+  let out=path(d);
+  out+=ln(x,bodyTop+neckBack,x,bodyBottom,"#888","4 3");
+  out+=ln(x,waistY,x+w,waistY,"#547f70","3 2");
+  out+=ln(x,hipY,x+w,hipY,"#547f70","3 2");
+  out+=txt(x+w*.5,bodyTop+mm(12),"COSTAS",5);
+  out+=txt(x+w*.5,bodyTop+mm(20),"CORTAR NA DOBRA",3.8);
+  out+=ln(x+w*.5,bodyTop+mm(10),x+w*.5,bodyBottom-mm(5),"#387a65","5 3");
+  if(sleeve==="raglan"){
+   out+=path(`M ${x+neckW} ${bodyTop+mm(2)} Q ${x+w*.22} ${bodyTop+mm(8)} ${x+w*.12} ${underarmY-mm(3)}`,"#9a5968");
+   out+=txt(x+w*.4,underarmY-mm(5),"LINHA RAGLAN",3.5);
+  }
+  return out;
+ }
+ function sleevePiece(){
+  const x=sleeveX,y=bodyTop;
+  const w=sleeveW,h=sleeveH;
+  const capH=Math.min(armhole*1.05,h*.42);
+  const topX=x+w/2;
+  const bottomW=sleeveLength==="long"?wristW:w*.78;
+  const bottomX=x+(w-bottomW)/2;
+  let d=`M ${x} ${y+capH}
+   Q ${x+w*.12} ${y+capH*.12} ${topX} ${y}
+   Q ${x+w*.88} ${y+capH*.12} ${x+w} ${y+capH}
+   L ${bottomX+bottomW} ${y+h}
+   L ${bottomX} ${y+h} Z`;
+  let out=path(d);
+  out+=ln(topX,y+capH*.5,topX,y+h,"#387a65","5 3");
+  out+=txt(topX,y+capH+mm(8),"MANGA",5);
+  out+=txt(topX,y+capH+mm(15),sleeve==="raglan"?"RAGLAN — LINHAS A AJUSTAR":"CONVENCIONAL",3.8);
+  out+=txt(topX,y+h-mm(5),"BARRA",3.8);
+  if(sleeve==="raglan"){
+   out+=path(`M ${x} ${y+capH} Q ${x+w*.20} ${y+capH*.20} ${x+w*.34} ${y+capH*.10}`,"#9a5968");
+   out+=path(`M ${x+w} ${y+capH} Q ${x+w*.80} ${y+capH*.20} ${x+w*.66} ${y+capH*.10}`,"#9a5968");
+  }
+  return out;
+ }
+ function collarPieces(){
+  const x=extrasX,y=topExtra;
+  let out="";
+  if(collar==="round"){
+   const len=mm(v.neck*0.85);
+   const h=mm(3.5);
+   out+=rect(x,y,len,h,"FAIXA DE GOLA REDONDA — AJUSTAR À CAVA");
+   out+=txt(x+len/2,y+h/2+2,"CORTAR EM MALHA / DOBRAR",3.5);
+  }else if(collar==="v"){
+   const len=mm(v.neck*.85),h=mm(3);
+   out+=rect(x,y,len,h,"ACABAMENTO DA GOLA V");
+  }else if(collar==="polo"){
+   const len=mm(v.neck*.9);
+   out+=rect(x,y,len,collarH,"GOLA POLO — PARTE SUPERIOR");
+   out+=rect(x,y+collarH+mm(3),len,collarH,"GOLA POLO — PARTE INFERIOR");
+  }else if(collar==="shirt"){
+   const len=mm(v.neck*.95);
+   out+=rect(x,y,len,collarH,"COLARINHO — PÉ");
+   out+=rect(x,y+collarH+mm(3),len,collarH+mm(1),"COLARINHO — FOLHA");
+   out+=txt(x+len/2,y+collarH*2+mm(10),"CORTAR 2 + ENTRETELA",3.5);
+  }
+  return out;
+ }
+ function sleeveFinish(){
+  const x=extrasX,y=topExtra+mm(30);
+  if(sleeveLength!=="long"||cuff==="simple")return "";
+  if(cuff==="rib"){
+   const w=mm(v.wrist+2),h=cuffH;
+   return rect(x,y,w,h,"PUNHO DE MALHA");
+  }
+  const w=mm(v.wrist+4),h=cuffH;
+  return rect(x,y,w,h,"PUNHO SOCIAL — CORTAR 2");
+ }
+ function frontPlacket(){
+  if(opening==="none")return "";
+  const x=extrasX,y=topExtra+mm(50);
+  const w=buttonW,h=placketL;
+  let out=rect(x,y,w,h,opening==="polo"?"VISTA POLO":"VISTA FRONTAL");
+  if(opening==="buttons"){
+   for(let i=1;i<=Math.min(7,Math.max(2,Math.floor(v.placket/3)));i++){
+    out+='<circle cx="'+(x+w/2)+'" cy="'+(y+h*i/(Math.min(7,Math.max(2,Math.floor(v.placket/3)))+1))+'" r="1.2" fill="none" stroke="#222"/>';
+   }
+  }
+  return out;
+ }
+ function pocketPiece(){
+  if(!pocket)return "";
+  const x=extrasX,y=topExtra+mm(80),w=pocketW,h=pocketH;
+  return path(`M ${x} ${y} L ${x+w} ${y} L ${x+w} ${y+h-mm(2)} Q ${x+w/2} ${y+h+mm(2)} ${x} ${y+h-mm(2)} Z`)
+   +txt(x+w/2,y-5,"BOLSO APLICADO",4.5);
+ }
+ function cuffOpeningPiece(){
+  if(style!=="social"||sleeveLength!=="long")return "";
+  const x=extrasX,y=topExtra+mm(105);
+  return rect(x,y,mm(4),mm(15),"VISTA DA ABERTURA DA MANGA");
+ }
+ function allowanceGuide(){
+  return txt(bodyX,bodyBottom+mm(15),"Margens: adicionar ao contorno na modelagem final; linha tracejada é referência.",4,"start");
+ }
+
+ const title=style==="basic"?"CAMISETA BÁSICA":style==="polo"?"BLUSA POLO":"CAMISA SOCIAL";
+ const drawing=
+  '<rect x="0" y="0" width="2500" height="2500" fill="white"/>'+
+  txt(80,25,"MEU ATELIÊ — "+title,8,"start")+
+  txt(80,38,"Prévia paramétrica | Medidas em centímetros | Conferir escala antes de cortar",4.5,"start")+
+  frontBody()+backBody()+sleevePiece()+collarPieces()+sleeveFinish()+frontPlacket()+pocketPiece()+cuffOpeningPiece()+
+  allowanceGuide()+
+  '<rect x="80" y="'+(bodyBottom+mm(25))+'" width="50" height="50" fill="none" stroke="#222" stroke-width="1"/>'+
+  txt(105,bodyBottom+mm(25)+25,"5 × 5 cm",4);
+ const width=Math.max(extrasX+mm(40),sleeveX+sleeveW+mm(30),backX+bodyWidth+mm(30));
+ const height=Math.max(bodyBottom+mm(40),topExtra+mm(130));
+ const svg='<svg xmlns="'+NS+'" width="'+width+'mm" height="'+height+'mm" viewBox="0 0 '+width+' '+height+'">'+drawing+'</svg>';
+ $("preview").innerHTML=svg;
+ $("summary").textContent=
+  "Modelo: "+title+". Manga: "+(sleeve==="raglan"?"raglan":"convencional")+
+  ", "+(sleeveLength==="long"?"longa":"curta")+". Gola: "+collar+
+  ". Abertura: "+opening+". Caimento: "+fit+
+  ". Tórax com folga calculada de "+ease+" cm"+(shirtExtra? " + "+shirtExtra+" cm de folga social":"")+
+  ". Conferir encaixe e comprimentos das costuras antes do corte.";
+ makeTiles(svg,width,height);
+ $("result").style.display="block";
+ $("print").disabled=false;
+ $("status").textContent="Prévia gerada. Revise o modelo e as medidas antes de imprimir.";
+ ready=true;
+}
+
+function makeTiles(svg,width,height){
+ const tileW=1900,tileH=2770,overlap=100;
+ const stepX=tileW-overlap,stepY=tileH-overlap;
+ const nx=Math.max(1,Math.ceil((width-overlap)/stepX));
+ const ny=Math.max(1,Math.ceil((height-overlap)/stepY));
+ const doc=new DOMParser().parseFromString(svg,"image/svg+xml");
+ const root=doc.documentElement;
+ let html="";
+ for(let r=0;r<ny;r++){
+  for(let c=0;c<nx;c++){
+   const x=c*stepX,y=r*stepY;
+   const clone=root.cloneNode(true);
+   clone.setAttribute("width","190mm");
+   clone.setAttribute("height","277mm");
+   clone.setAttribute("viewBox",x+" "+y+" "+tileW+" "+tileH);
+   clone.setAttribute("preserveAspectRatio","none");
+   const label=doc.createElementNS(NS,"text");
+   label.setAttribute("x",x+35);
+   label.setAttribute("y",y+45);
+   label.setAttribute("font-size","28");
+   label.textContent="Folha "+(r+1)+"-"+(c+1)+" | sobreposição 10 mm";
+   clone.appendChild(label);
+   html+='<div class="tile">'+new XMLSerializer().serializeToString(clone)+'</div>';
+  }
+ }
+ $("printArea").innerHTML=html;
+}
+$("generate").addEventListener("click",generate);
+$("print").addEventListener("click",()=>{if(ready)window.print();});
+})();
+</script>
+</body>
+</html>
